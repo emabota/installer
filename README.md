@@ -9,7 +9,7 @@ The installer assumes offline installation/upgrade (without any internet connect
 
 ### Usage
 
-Download the [self-extracting installer](https://gitlab.cirg.washington.edu/esaude/install-script/makeself/install-esaude-1.0.0-beta.1.run).
+Download the [self-extracting installer](https://gitlab.cirg.washington.edu/esaude/install-script/blob/master/makeself/install-esaude-1.0.0-beta.1.run).
 
 Open a terminal and navigate to the directory where the installer was downloaded.
 
