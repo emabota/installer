@@ -1,0 +1,82 @@
+
+This process will require superuser privileges to perform certain tasks.
+Please enter your password if prompted.
+
+A log file will be created to capture the progress of this process.
+The file will be created in the installer directory with the name:
+install-eSaude-2018-06-07_11:12:19.log
+
+==================================================
+eSaúde Platform & EMR POC Installer v1.0.0-alpha.3
+==================================================
+
+Checking Linux distribution and release...
+Supported Linux distribution detected: Ubuntu 16.04.1 LTS.
+
+Checking for processor requirements... 64-bit processor detected.
+
+Checking for 64-bit OS... 64-bit OS detected.
+
+THIS PROCESS SHOULD ONLY BE RUN ON A DEDICATED UPGRADE SERVER!
+AVOID UPGRADING A LIVE PRODUCTION SERVER AS DATA LOSS MAY OCCUR!
+Are you sure you want to continue? [NO/yes] 
+Looking for any existing eSaúde Platform container(s)...
+sudo: docker: command not found
+Platform MySQL container not found...
+sudo: docker: command not found
+Platform Tomcat container not found...
+sudo: docker: command not found
+eSaúde EMR POC container not found...
+
+No current versions found... continuing...
+dpkg-query: no packages found matching docker-ce
+
+OpenMRS webapp directory not found...
+
+Is this a brand new install without an existing copy of OpenMRS running?
+If so, this process will continue to install the eSaúde Platform without backing up or restoring a database.
+Is that what you want to do? [NO/yes] 
+Checking for docker...
+dpkg-query: no packages found matching docker
+dpkg-query: no packages found matching docker-engine
+dpkg-query: no packages found matching docker.io
+dpkg-query: no packages found matching docker-ce
+Docker not found... installing...
+
+Looking for docker installer...
+Local copy of docker installer found...
+Docker dependency already installed...
+dpkg-query: no packages found matching libsystemd-journal0
+Docker dependency not found... installing...
+
+Looking for docker dependency libsystemd-journal0...
+ls: cannot access './xenial/libsystemd-journal0*.deb': No such file or directory
+
+
+Local copy of docker dependency found...
+dpkg: error: --install needs at least one package archive file argument
+
+Type dpkg --help for help about installing and deinstalling packages [*];
+Use 'apt' or 'aptitude' for user-friendly package management;
+Type dpkg -Dhelp for a list of dpkg debug flag values;
+Type dpkg --force-help for a list of forcing options;
+Type dpkg-deb --help for help about manipulating *.deb files;
+
+Options marked [*] produce a lot of output - pipe it through 'less' or 'more' !
+Selecting previously unselected package docker-ce.
+(Reading database ... 242741 files and directories currently installed.)
+Preparing to unpack .../docker-ce_18.03.1_ce-0_ubuntu_amd64.deb ...
+Unpacking docker-ce (18.03.1~ce-0~ubuntu) ...
+dpkg: dependency problems prevent configuration of docker-ce:
+ docker-ce depends on libseccomp2 (>= 2.3.0); however:
+  Version of libseccomp2:amd64 on system is 2.2.3-3ubuntu3.
+
+dpkg: error processing package docker-ce (--install):
+ dependency problems - leaving unconfigured
+Processing triggers for systemd (229-4ubuntu21.1) ...
+Processing triggers for ureadahead (0.100.0-19) ...
+Processing triggers for man-db (2.7.5-1) ...
+Errors were encountered while processing:
+ docker-ce
+Docker not successfully installed...
+Exiting...
