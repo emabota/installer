@@ -1,0 +1,31 @@
+Release notes
+	
+	1.0.0b1
+		Clarified user messages
+		Added libseccomp2 v. 2.3.1-2.1 for Xenial 16.04.1 support, logic added to upgrade existing libseccomp2 pkg
+		"Installer" usage for clean "Installation" rather than only automated "Upgrading" is intended in the version
+		
+	1.0.0a3
+		Removed container startup wait timeout, replaced with elapsed time since install began
+		Remove previously installed Docker Containers
+		
+	1.0.0a2
+		Minor script fixes for container startup wait loop
+		Added libsystemd-journal0 v. 204-5 for Trusty 14.04 installs
+		
+	1.0.0a1
+		Initial relase supporting detection of operating system version, detection and install of dependencies for docker-ce and docker-compose
+			
+			including libltdl7 v. 2.4.6-01 dep. for Xenial, v. 2.4.2-1.7 for Trusty, and docker-ce v. 18.03.1_ce-0 
+			clean-database-dump.sh	
+			docker-compose v. 3.2.1
+			esaude-platform-mysql-docker-1.4.4.tar.gz	
+			esaude-platform-tomcat-docker-1.4.4.tar.gz	
+			esaude-poc-docker-2.0.0.tar.gz	
+			mysqldump-5.5.60
+			
+		Creation of docker data volume and network between docker containers
+		Export/Import of SQL database
+		"Install" startup of docker containers
+		
+		Some packages are installed if they do not exist (rather than requiring a previous version, i.e. only upgrading)
