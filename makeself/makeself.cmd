@@ -1,1 +1,3 @@
-makeself --notemp --follow install-esaude/ install-esaude-1.0.0-beta.2.run "eSaúde Platform & EMR POC v1.0.0-beta.2" ./install-eSaude.sh
+. ./install-esaude/get_version.sh
+
+makeself --notemp --follow install-esaude/ install-esaude-${installer_version}.run "eSaúde Platform & EMR POC v${installer_version}" ./install-eSaude.sh

@@ -15,9 +15,12 @@ printf "\nA log file will be created to capture the progress of this process.\nT
 
 double_line="=================================================="
 software_name="eSaúde Platform & EMR POC"
-script_version='1.0.0-beta.1'
 
-req_dist_release='Ubuntu 1(6|4)\.04\.[0-9]+ LTS' 
+. ./get_version.sh
+
+script_version=$installer_version
+
+req_dist_release='Ubuntu 1(8|6|4)\.04(\.[0-9]+)? LTS' 
 platform_name_version=`/usr/bin/lsb_release -sd`
 
 dpkg_req_arch='amd64'
@@ -55,16 +58,25 @@ version_group_regex='[0-9]+'
 new_docker_version='18.03.1'
 min_docker_version='17.06.0'
 
-docker_filename="docker-ce_${new_docker_version}_ce-0_ubuntu_amd64.deb"
+#docker_filename="docker-ce_${new_docker_version}_ce-0_ubuntu_amd64.deb"
+docker_filename="docker-ce*.deb"
 
-docker_installer="$ubuntu_codename/$docker_filename"
+docker_installer=`ls $ubuntu_codename/$docker_filename`
 
-trusty_docker_depends_pkgs=(libltdl7 libsystemd-journal0)
-xenial_docker_depends_pkgs=(libltdl7)
+docker_depends_pkgs=(libltdl7 libsystemd-journal0 libseccomp2)
+docker_depends_vers=("0" "0" "2.3.0")
+
+trusty_requires=(1 1 0)
+xenial_requires=(1 0 1)
+bionic_requires=(1 0 0)
+
+#trusty_docker_depends_pkgs=(libltdl7 libsystemd-journal0)
+#xenial_docker_depends_pkgs=(libltdl7 libseccomp2)
 
 docker_depends_dir="./$ubuntu_codename/"
 
-docker_download_url="https://download.docker.com/linux/ubuntu/dists/$ubuntu_codename/pool/stable/amd64/docker-ce_$new_docker_version~ce-0~ubuntu_amd64.deb"
+docker_download_url="https://download.docker.com/linux/ubuntu/dists/$ubuntu_codename/pool/stable/amd64/"
+docker_download_glob="docker-ce_$new_docker_version*.deb"
 
 min_docker_compose_version='1.12.0'
 
@@ -80,14 +92,14 @@ mysql_db=""
 clean_database_script_path="common/clean-database-dump.sh"
 cleaned_database_backup="openmrs_backup_${backup_timestamp}_clean.sql"
 
-local_platform_mysql_image="common/esaude-platform-mysql-docker-1.4.4.tar.gz"
-platform_mysql_name="esaude-docker-platform-docker.bintray.io/mysql:1.4.4"
+local_platform_mysql_image="common/esaude-platform-mysql-docker-1.4.5.tar.gz"
+platform_mysql_name="esaude-docker-platform-docker.bintray.io/mysql:1.4.5"
 
-local_platform_tomcat_image="common/esaude-platform-tomcat-docker-1.4.4.tar.gz"
-platform_tomcat_name="esaude-docker-platform-docker.bintray.io/tomcat:1.4.4"
+local_platform_tomcat_image="common/esaude-platform-tomcat-docker-1.4.5.tar.gz"
+platform_tomcat_name="esaude-docker-platform-docker.bintray.io/tomcat:1.4.5"
 
-local_poc_image="common/esaude-poc-docker-2.0.0.tar.gz"
-poc_name="esaude-docker-poc-docker.bintray.io/poc:2.0.0"
+local_poc_image="common/esaude-poc-docker-2.0.2.tar.gz"
+poc_name="esaude-docker-poc-docker.bintray.io/poc:2.0.2"
 
 #migrate-to-labels support for upgrading from 1.2 or earlier?
 
@@ -115,7 +127,7 @@ function get_confirmation {
 
 		read confirm
 
-		if [ -z $confirm ] || [ $confirm != "yes" ]; then
+		if [ -z "$confirm" ] || [ "$confirm" != "yes" ]; then
 			output "Process canceled by user.\n"
 			quit
 		else #implies "yes", break psuedo do-while
@@ -409,7 +421,7 @@ function backup_database {
        	        eval "$mysqldump_cmd --hex-blob --routines --triggers -u'$omrs_user' -p'$omrs_pass' --databases openmrs > $database_backup"
         fi
 
-	if [ -s $database_backup ]; then
+	if [ -s "$database_backup" ]; then
 		output "Database backup successful.\nBackup file is located in the installer directory with the name:\n$database_backup\n"
 	else
 		output "Database backup failed, please review the log file for details: ${LOG_FILE}\n"
@@ -425,9 +437,9 @@ function clean_backup {
 		return 0
 	fi
 
-	if [ -s $database_backup ]; then
+	if [ -s "$database_backup" ]; then
 
-		if [ -e $clean_database_script_path ]; then
+		if [ -e "$clean_database_script_path" ]; then
 			output "\nCleaning database backup..."
 			./$clean_database_script_path $database_backup $cleaned_database_backup
 			if [ $? -eq 0 ]; then
@@ -514,15 +526,16 @@ function install_docker {
 
 		output "\nLooking for docker installer...\n"
 
-		if [ -e $docker_installer ]; then
+		if [ -e "$docker_installer" ]; then
 			output "Packaged copy of docker installer found...\n"
 		else
 			output "Packaged copy of docker installer not found... attempting to download...\n"
 			if [ ! -d $ubuntu_codename ]; then
-		        	mkdir $ubuntu_codename
+		        	mkdir "$ubuntu_codename"
 			fi
-			sudo wget $docker_download_url -O$docker_installer --progress=dot
-			if [ -s ${docker_installer} ]; then
+			sudo wget -r -l1 -np -nd -P "$ubuntu_codename" "$docker_download_url" --progress=dot -A "$docker_download_glob"
+
+			if [ -s "${docker_installer}" ]; then
 				output "Docker installer successfully downloaded...\n"
 			else
 				output "Docker installer not successfully downloaded...\n"
@@ -530,26 +543,33 @@ function install_docker {
 			fi
 		fi
 
-		if [ "$ubuntu_codename" = "trusty" ]; then
-			docker_depends_pkgs=("${trusty_docker_depends_pkgs[@]}")
-		else
-			docker_depends_pkgs=("${xenial_docker_depends_pkgs[@]}")
-		fi
-			
+		#if [ "$ubuntu_codename" = "trusty" ]; then
+		#	docker_depends_pkgs=("${trusty_docker_depends_pkgs[@]}")
+		#else
+		#	docker_depends_pkgs=("${xenial_docker_depends_pkgs[@]}")
+		#fi
+		package_index=0
+
+		#see tldp.org/LDP/abs/html/ivr.html
+
+		release_req_pkgs="${ubuntu_codename}_requires"
+
 		for pkg in ${docker_depends_pkgs[@]};do
-			output "\nLooking for docker dependency ${pkg}...\n"
+			eval "pkg_req=\${$release_req_pkgs[$package_index]}"
 
-			dpkg_detect_installed ${pkg}
+			if [ $pkg_req -eq 1 ]; then
+				
+				output "\nLooking for docker dependency ${pkg}...\n"
 
-			if [ $? -eq 0 ]; then
-				output "Docker dependency already installed...\n"
-			else
-				output "Docker dependency not found... installing...\n"
+				dpkg_detect_installed ${pkg}
 
-				dep_pkg_filename=`ls ${docker_depends_dir}${pkg}*.deb`
-				#output "\n${dep_pkg_filename}\n"
-				if [ "$dep_pkg_filename" != "$docker_installer" ]; then
-					if [ -e $dep_pkg_filename ]; then
+				if [ $? -eq 0 ]; then
+					output "Docker dependency already installed...\n"
+				else
+					output "Docker dependency not found... installing...\n"
+	
+					dep_pkg_filename=`ls ${docker_depends_dir}${pkg}*.deb`
+					if [ -e "$dep_pkg_filename" ]; then
 						output "Packaged copy of docker dependency found...\n"
 						sudo dpkg -i $dep_pkg_filename
 						dpkg_detect_installed ${pkg}
@@ -576,15 +596,16 @@ function install_docker {
 					fi
 				fi
 			fi
+			let "package_index++"
 		done
 
                 # Special dependency case for xenial only. Docker-ce 18.03.1
                 # needs a newer version of libseccomp2 (>= 2.3.0)
                 if [ "$ubuntu_codename" = "xenial" ]; then
                         
-                        pkg="libseccomp2"
-                        min_ver="2.3.0"
-                        install_libseccomp2=0
+                        #pkg="libseccomp2"
+                        #min_ver="2.3.0"
+                        #install_libseccomp2=0
 
 			output "\nLooking for docker dependency ${pkg}...\n"
 
@@ -609,7 +630,7 @@ function install_docker {
 				dep_pkg_filename=`ls ${docker_depends_dir}${pkg}*.deb`
 				#output "\n${dep_pkg_filename}\n"
 				if [ "$dep_pkg_filename" != "$docker_installer" ]; then
-					if [ -e $dep_pkg_filename ]; then
+					if [ -e "$dep_pkg_filename" ]; then
 						output "Packaged copy of docker dependency found...\n"
 						sudo dpkg -i $dep_pkg_filename
 						dpkg_detect_installed ${pkg}
@@ -650,7 +671,7 @@ function install_docker {
 
 	output "\nChecking for docker-compose...\n"
 
-	if [ -e $docker_compose_path ]; then
+	if [ -e "$docker_compose_path" ]; then
 		output "Existing version of docker-compose found... checking version...\n"
 		install_docker_compose=0
 
@@ -675,10 +696,10 @@ function install_docker {
 	if [ $install_docker_compose -eq 1 ] || [ $upgrading_docker_compose_version -eq 1 ]; then 
 		
 		output "\nLooking for docker-compose...\n"
-		if [ ! -e $local_docker_compose_path ]; then
+		if [ ! -e "$local_docker_compose_path" ]; then
 			output "Packaged copy of docker-compose not found... attempting to download...\n"
 	       		sudo curl -L $docker_compose_url -o $docker_compose_path; sudo chmod +x $docker_compose_path
-			if [ -s ${docker_compose_path} ]; then
+			if [ -s "${docker_compose_path}" ]; then
 				output "Docker-compose successfully downloaded.\n"
 			else
 				output "Docker-compose not successfully downloaded.\n"
@@ -687,7 +708,7 @@ function install_docker {
 		else
 			output "Packaged copy of docker-compose found...\n"
 			sudo cp $local_docker_compose_path $docker_compose_path
-			if [ -s ${docker_compose_path} ]; then
+			if [ -s "${docker_compose_path}" ]; then
 				output "Docker-compose successfully installed.\n"
 			else
 				output "Docker-compose not successfully installed.\n"
@@ -778,7 +799,7 @@ function load_new_platform_mysql {
 
 	output "\nLooking for eSaúde Platform MySQL image...\n"
 
-	if [ -s $local_platform_mysql_image ]; then
+	if [ -s "$local_platform_mysql_image" ]; then
 		output "Packaged copy of image found...\n"
 		zcat $local_platform_mysql_image | sudo docker image load
 	else
@@ -866,7 +887,7 @@ function restore_database_backup {
 
 	output "Restoring from database backup..."
 
-        if [ -z $mysql_pass ] || [ -z $mysql_db ]; then
+        if [ -z "$mysql_pass" ] || [ -z "$mysql_db" ]; then
                 get_mysql_root_credentials
         fi
 
@@ -911,7 +932,7 @@ function load_new_platform_tomcat {
 
 	output "\nLooking for eSaúde Platform Tomcat image...\n"
 
-	if [ -s $local_platform_tomcat_image ]; then
+	if [ -s "$local_platform_tomcat_image" ]; then
 		output "Packaged copy of image found...\n"
 		zcat $local_platform_tomcat_image | sudo docker image load
 	else
@@ -981,7 +1002,7 @@ function load_emr_poc {
 
 	output "\nLooking for eSaúde EMR POC image...\n"
 
-	if [ -s $local_poc_image ]; then
+	if [ -s "$local_poc_image" ]; then
 		output "Packaged copy of image found...\n"
 		zcat $local_poc_image | sudo docker image load
 	else
