@@ -64,7 +64,16 @@ docker_filename="docker-ce*.deb"
 docker_installer=`ls $ubuntu_codename/$docker_filename`
 
 docker_depends_pkgs=(libltdl7 libsystemd-journal0 libseccomp2)
-docker_depends_vers=("0" "0" "2.3.0")
+
+#replace with parsing dpkg -I */docker-ce*.deb?
+#dpkg -I $ubuntu_codename/docker-ce* | grep Depends: | sed "s/Depends: //" | grep -P "\(.*?\)" -o | sed "s/(//g; s/)//g; s/>=/ge/g"
+#check for each dependency using ver number supplied
+
+trusty_docker_depends_vers=("2.4.2" "201" "0")
+
+recent_docker_depends_vers=("2.4.6" "0" "2.3.0")
+xenial_docker_depends_vers=$recent_docker_depends_vers
+bionic_docker_depends_vers=$recent_docker_depends_vers
 
 trusty_requires=(1 1 0)
 xenial_requires=(1 0 1)
@@ -543,32 +552,44 @@ function install_docker {
 			fi
 		fi
 
-		#if [ "$ubuntu_codename" = "trusty" ]; then
-		#	docker_depends_pkgs=("${trusty_docker_depends_pkgs[@]}")
-		#else
-		#	docker_depends_pkgs=("${xenial_docker_depends_pkgs[@]}")
-		#fi
 		package_index=0
 
 		#see tldp.org/LDP/abs/html/ivr.html
 
 		release_req_pkgs="${ubuntu_codename}_requires"
+		release_req_vers="${ubuntu_codename}_docker_depends_vers"
 
 		for pkg in ${docker_depends_pkgs[@]};do
+
 			eval "pkg_req=\${$release_req_pkgs[$package_index]}"
+			eval "ver_req=\${$release_req_vers[$package_index]}"
 
 			if [ $pkg_req -eq 1 ]; then
 				
 				output "\nLooking for docker dependency ${pkg}...\n"
 
+				install_pkg=0
+				
 				dpkg_detect_installed ${pkg}
 
-				if [ $? -eq 0 ]; then
-					output "Docker dependency already installed...\n"
-				else
+	               		if [ "$?" -eq 0 ]; then
+			                output "Docker dependency already installed... checking version...\n"
+			                compare_versions $(dpkg_version_installed ${pkg} ) ${min_ver}
+		        	        if [ $? -eq 1 ]; then
+			        	        output "Current version incompatible, installing newer version...\n"
+                                        	install_pkg=1
+		                	else	
+			                	output "Current version satisfies requirements...\n"
+                               		fi
+                        	else
 					output "Docker dependency not found... installing...\n"
-	
+                               	 	install_pkg=1
+                        	fi
+
+				if [ "$install_pkg" -ne 0  ]; then
+					
 					dep_pkg_filename=`ls ${docker_depends_dir}${pkg}*.deb`
+					
 					if [ -e "$dep_pkg_filename" ]; then
 						output "Packaged copy of docker dependency found...\n"
 						sudo dpkg -i $dep_pkg_filename
@@ -598,66 +619,6 @@ function install_docker {
 			fi
 			let "package_index++"
 		done
-
-                # Special dependency case for xenial only. Docker-ce 18.03.1
-                # needs a newer version of libseccomp2 (>= 2.3.0)
-                if [ "$ubuntu_codename" = "xenial" ]; then
-                        
-                        #pkg="libseccomp2"
-                        #min_ver="2.3.0"
-                        #install_libseccomp2=0
-
-			output "\nLooking for docker dependency ${pkg}...\n"
-
-	                dpkg_detect_installed ${pkg}
-
-	                if [ $? -eq 0 ]; then
-		                output "Docker dependency already installed... checking version...\n"
-		                compare_versions $(dpkg_version_installed ${pkg} ) ${min_ver}
-		                if [ $? -eq 1 ]; then
-			                output "Current version incompatible, installing newer version...\n"
-                                        install_libseccomp2=1
-		                else	
-			                output "Current version satisfies requirements...\n"
-                                fi
-                        else
-				output "Docker dependency not found... installing...\n"
-                                install_libseccomp2=1
-                        fi
-
-                        if [ $install_libseccomp2 -eq 1 ]; then
-
-				dep_pkg_filename=`ls ${docker_depends_dir}${pkg}*.deb`
-				#output "\n${dep_pkg_filename}\n"
-				if [ "$dep_pkg_filename" != "$docker_installer" ]; then
-					if [ -e "$dep_pkg_filename" ]; then
-						output "Packaged copy of docker dependency found...\n"
-						sudo dpkg -i $dep_pkg_filename
-						dpkg_detect_installed ${pkg}
-						if [ $? -eq 0 ]; then
-							output "Docker dependency successfully installed...\n"
-						else
-							output "Docker dependency not successfully installed...\n"
-							quit
-						fi
-					else
-						output "Packaged copy of docker dependency not found... attempting to download...\n"
-						if [ ! -d $ubuntu_codename ]; then
-			        			mkdir $ubuntu_codename
-						fi
-					
-						sudo apt-get -q install ${pkg}
-						dpkg_detect_installed ${pkg}
-						if [ $? -eq 0 ]; then
-							output "Docker dependency successfully installed...\n"
-						else
-							output "Docker dependency not successfully installed...\n"
-							quit
-						fi
-					fi
-				fi
-                        fi
-		fi
 
 		sudo dpkg -i $docker_installer
 		dpkg_detect_installed docker-ce
@@ -820,22 +781,23 @@ function load_new_platform_mysql {
 function wait_for_container_start {
 
 	time_passed=0
+	start_time=`date +%s`
+
+	output "The current time is `date`, starting container...\n"
 	while : ; do
 		res=$(sudo docker logs --tail=5 $1 2>&1 | grep -c "$2")
+
 		if [ $res -ne 0 ]; then
 			break
 		fi
 		
-                sleep 5
-		let "time_passed+=5"
+                sleep 15
+		let "time_passed=`date +%s`-$start_time"
 
-		let "time_mins=$time_passed % 300"
-		if [ $time_mins -eq 0 ]; then
-			let "time_passed_mins=$time_passed/60"	
-			output "$time_passed_mins minutes elapsed... if longer than 60, examine logs to check on progress...\n"
-		fi
+		output "$((time_passed/3600))h$((time_passed%3600/60))m$((time_passed%60))s elapsed    \r"
 	done
 
+	output "\n"
 }
 
 function start_platform_mysql {
@@ -948,7 +910,7 @@ function load_new_platform_tomcat {
 		quit
 	fi
 
-	output "\nStarting eSaúde Platform Tomcat container... this will take several minutes,\npossibly 30 or more...\n"
+	output "\nStarting eSaúde Platform Tomcat container... this will possibly take 30 minutes or more...\n"
 
 	sudo docker run --name esaude-platform-tomcat -p 8080:8080 -v esaude_data:/opt/esaude/data --network='esaude_network' --restart=unless-stopped -d $platform_tomcat_name
 
