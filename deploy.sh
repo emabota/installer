@@ -1,6 +1,16 @@
 #!/bin/bash
 
-. ../tinyurl.sh
+automated=0
+
+while getopts "a" opt; do
+    case ${opt} in
+        a ) automated=1;;
+    esac
+done
+
+if [ "$automated" -eq 0 ]; then
+    . ../tinyurl.sh
+fi
 
 if [ -z $gdrive_path ]; then
 	gdrive help > /dev/null 2>&1
