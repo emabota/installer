@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_FILE="install-eSaude-`date +'%F_%T'`.log"
+LOG_FILE="log/install-eSaude-`date +'%F_%T'`.log"
 exec 3>&1 4>&2 1>${LOG_FILE} 2>&1
 
 if [ "$EUID" -ne 0 ]; then

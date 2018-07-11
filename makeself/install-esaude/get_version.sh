@@ -1,1 +1,1 @@
-installer_version="1.0.0-beta.2"
+installer_version="1.0.0-rc.1"
