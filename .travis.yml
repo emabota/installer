@@ -1,0 +1,10 @@
+language: generic
+sudo: enabled
+
+install: 
+  - sudo apt update -y -qq && sudo apt install makeself -y -qq
+before_script:
+  - ./pull-pkg-docker-containers.sh
+# - ./download-docker-releases.sh
+script:
+  - ./makeself/makeself.cmd
