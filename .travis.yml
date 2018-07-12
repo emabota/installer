@@ -4,7 +4,7 @@ sudo: enabled
 install: 
   - sudo apt update -y -qq && sudo apt install makeself -y -qq
 before_script:
-  - ./pull-pkg-docker-containers.sh
+  - ./pull-pkg-docker-containers.sh -a
 # - ./download-docker-releases.sh
 script:
   - ./makeself/makeself.cmd
