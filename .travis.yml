@@ -5,6 +5,7 @@ install:
 before_script:
 - ". ./get-latest-container-ver-num.sh"
 - "./pull-pkg-docker-containers.sh -a"
+- "./download-docker-releases.sh"
 script:
 - sed -i "s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" ./makeself/install-esaude/install-eSaude.sh
 - "./makeself/makeself.cmd"
