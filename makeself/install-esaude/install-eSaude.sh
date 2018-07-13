@@ -101,14 +101,14 @@ mysql_db=""
 clean_database_script_path="common/clean-database-dump.sh"
 cleaned_database_backup="openmrs_backup_${backup_timestamp}_clean.sql"
 
-local_platform_mysql_image="common/esaude-platform-mysql-docker-1.4.5.tar.gz"
-platform_mysql_name="esaude-docker-platform-docker.bintray.io/mysql:1.4.5"
+local_platform_mysql_image="common/esaude-platform-mysql-docker-__MYSQL_VERSION__.tar.gz"
+platform_mysql_name="esaude-docker-platform-docker.bintray.io/mysql:__MYSQL_VERSION__"
 
-local_platform_tomcat_image="common/esaude-platform-tomcat-docker-1.4.5.tar.gz"
-platform_tomcat_name="esaude-docker-platform-docker.bintray.io/tomcat:1.4.5"
+local_platform_tomcat_image="common/esaude-platform-tomcat-docker-__TOMCAT_VERSION__.tar.gz"
+platform_tomcat_name="esaude-docker-platform-docker.bintray.io/tomcat:__TOMCAT_VERSION__"
 
-local_poc_image="common/esaude-poc-docker-2.0.2.tar.gz"
-poc_name="esaude-docker-poc-docker.bintray.io/poc:2.0.2"
+local_poc_image="common/esaude-poc-docker-__POC_VERSION__.tar.gz"
+poc_name="esaude-docker-poc-docker.bintray.io/poc:__POC_VERSION__"
 
 #migrate-to-labels support for upgrading from 1.2 or earlier?
 
