@@ -8,7 +8,7 @@ echo "$this_releases_versions"
 
 new_installer_version=`echo "$this_releases_versions" | jq '.name[]' | sed 's/"//g'`
 POC_Ver=`echo "$this_releases_versions" | jq '.attributes.POC_Ver[]' | sed 's/"//g'`
-Platform_Ver=`echo "$this_releases_versions" | jq 'attributes.Platform_Ver[]' | sed 's/"//g'`
+Platform_Ver=`echo "$this_releases_versions" | jq '.attributes.Platform_Ver[]' | sed 's/"//g'`
 
 min_ver=`echo $new_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
 let "min_ver++"
