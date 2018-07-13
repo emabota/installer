@@ -1,8 +1,8 @@
 {
 	"package": {
-		"name":"distributable",
-		"repo":"generic_test",
-		"subject":"longk"
+		"name":"installer",
+		"repo":"installer",
+		"subject":"esaude"
 	},
 	"version": {
 		"name": "__RELEASE_VERSION__",
