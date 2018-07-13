@@ -7,13 +7,15 @@ before_script:
 - "./pull-pkg-docker-containers.sh -a"
 script:
 - "./makeself/makeself.cmd"
-before_deploy: 
+before_deploy:
 - ". ./makeself/install-esaude/get_version.sh"
-- "sed -i \"s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g\" desc.json"
+- sed -i "s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g;
+  s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" desc.json
 deploy:
   provider: bintray
   file: desc.json
-  user: longk
+  user:
+    secure: MXBpMKOENBjp7l4XV1wCGteocfFAJgEYWkVnKHQYRVGZi1bKQS+IXTXmtgN/0zljkozbHwRkCgN4YYFJ3iKRJ0PIbUlipF00toM5T2DEwI+7wQdtRY1MuCUnkM9KOLSbvMVNrDMncB3k6u5P6YveYwYQjelaVnH8NTEe3qnN83PO0z1J1/qC70LMJJwGtvpxf/YInHyY4lSTikO33d7GcXVgfwuxNPD24mhX+6JdvrETn3xh96+goNTEwYn0AUTyZO1glzYoEZ+vvtnvESfCeIoAdM54hppEPS6XgTOQBWoilBrh19ww35AhHbGdEvHTibV7ymqCSRIYtvcDTSEvwUmUdjoy5gFdX3R43DbpN82uJ4Ri9L+EX21zDmDNLJJgKrVB5huj+0pPfSgoEtE4Xz+TTOV4WHLK/4LezgSOAYNo3GrAo9eqvy5/6kEv2Bj+YNvCRbpKrSV+AZZLCifiL7yo8fpXuxx7gjphYTZ6EmKThOm+BnGHWtXzd6TsiSqPBhtQHaDSPyIWkHTOQLfYdzL+vQzciG0T/oYl1BPsPpA2GvEjtye7xM7eTipkieQnEKCkEBnGfYkEgkCXrWMS99IK9+QjIIPJdMB+x+xFOlzVXQfGF+zWApkiv++fwIEvQfBSybLLt6NGsJ88rPSyGY5QGOyCIIp2AyKIxXRYY/0=
   key:
     secure: YMIa2+BvfkaDoRm2Wd/puxEyUChYo3Re1ttWZZ7Ip2Xc4mC1h2pw4UTB/9bmOCi/rU4gyPlWs+CLOc4oZ1k6waoBLPmMBT4+PkjTWtW2kOmLWtWgeU6RVSn4zLshRMLnNOIBW+0rqmNgjkYkqp4DQOZAwsdgqnAj0/h7Q4VsmiMVGQSaJV2htOWP8YJSOjIs23U7NeMP1Lcvr9o436P8TaMEpbD5VPQFhQzRkcvzmRA2shyijm0FwE2z4LOfqQqx2pnq5DiTXYX6m1Ng9aLHrV7tDJmQjIZ+66DHXuz2jybcLnQ8rllna+aSI48ulcOQeW4Izkm1k76RtcYFyvEh4u3t5Eyq37mx8HRQp+T0MfE6OTMOGob7pndqYdbIjFBU0Q/jQNELbOXuhQUh5+Ka8WsfFeu2x23mZOQKi6chVwlORI746ykusDFFdErwBjiJzCgPVCeE8ZjFDOzh4Ffgr7NdoaKAfMUfzmaQZV+42vwu2sXYpLFGOFuanVE1LkyfQuNJahqrjJPAJCOIb7ZnQvSZKDoczvAZjliOJfCCXA5A8rupJmGiTzQavPXbs8/8W99RaZ8i/9vjav6bS9hrEcnHob3aNkjdYaH7BpsEUNUXzqPpFaVbgYrHxIYrLhjivVZ1J5TD2UKK79ieaH6ejoFNV53rOgEV2wXcCpTra9Y=
   skip_cleanup: true
