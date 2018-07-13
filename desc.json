@@ -1,0 +1,22 @@
+{
+	"package": {
+		"name":"distributable",
+		"repo":"generic_test",
+		"subject":"longk"
+	},
+	"version": {
+		"name": "__RELEASE_VERSION__",
+		"attributes": 
+			[{"name": "POC_Ver", "values": ["__POC_VERSION__"], "type":"string"},
+			 {"name": "MySQL_Ver","values": ["__MYSQL_VERSION__"], "type":"string"},
+			 {"name": "Tomcat_Ver","values":["__TOMCAT_VERSION__"], "type":"string"}]		
+	},
+	"files": [{
+		"includePattern": "./makeself/build/install-esaude-__RELEASE_VERSION__.run",
+		"uploadPattern": "install-esaude-__RELEASE_VERSION__.run",
+		"matrixParams": {
+			"override": 1
+		}
+	}],
+	"publish": false
+}

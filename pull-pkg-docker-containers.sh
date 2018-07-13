@@ -36,19 +36,8 @@ fi
 
 if [ $automated -eq 1 ]; then
 
-	vars=("latest_mysql" "latest_tomcat" "latest_poc")
-	pkgs=("platform-docker/mysql" "platform-docker/tomcat" "poc-docker/poc")
+	. ./get-latest-container-ver-num.sh
 
-	index=0
-	for pkg in ${pkgs[@]}; do
-		echo ${vars[$index]}
-
-		
-		eval "${vars[$index]}=`curl https://api.bintray.com/packages/esaude/$pkg/versions/_latest | grep -P '(?<=\"name\":\").*?(?=",)' -o`"
-		
-		let "index++"
-	done
-	
 	echo "mysql $latest_mysql tomcat $latest_tomcat poc $latest_poc"
 fi
 

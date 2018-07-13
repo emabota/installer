@@ -1,10 +1,19 @@
 language: generic
 sudo: enabled
-
-install: 
-  - sudo apt update -y -qq && sudo apt install makeself -y -qq
+install:
+- sudo apt update -y -qq && sudo apt install makeself -y -qq
 before_script:
-  - ./pull-pkg-docker-containers.sh -a
-# - ./download-docker-releases.sh
+- ". ./get-latest-container-ver-num.sh"
+- "./pull-pkg-docker-containers.sh -a"
 script:
-  - ./makeself/makeself.cmd
+- "./makeself/makeself.cmd"
+before_deploy: 
+- ". ./makeself/install-esaude/get_version.sh"
+- "sed -i \"s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g\" desc.json"
+deploy:
+  provider: bintray
+  file: desc.json
+  user: longk
+  key:
+    secure: YMIa2+BvfkaDoRm2Wd/puxEyUChYo3Re1ttWZZ7Ip2Xc4mC1h2pw4UTB/9bmOCi/rU4gyPlWs+CLOc4oZ1k6waoBLPmMBT4+PkjTWtW2kOmLWtWgeU6RVSn4zLshRMLnNOIBW+0rqmNgjkYkqp4DQOZAwsdgqnAj0/h7Q4VsmiMVGQSaJV2htOWP8YJSOjIs23U7NeMP1Lcvr9o436P8TaMEpbD5VPQFhQzRkcvzmRA2shyijm0FwE2z4LOfqQqx2pnq5DiTXYX6m1Ng9aLHrV7tDJmQjIZ+66DHXuz2jybcLnQ8rllna+aSI48ulcOQeW4Izkm1k76RtcYFyvEh4u3t5Eyq37mx8HRQp+T0MfE6OTMOGob7pndqYdbIjFBU0Q/jQNELbOXuhQUh5+Ka8WsfFeu2x23mZOQKi6chVwlORI746ykusDFFdErwBjiJzCgPVCeE8ZjFDOzh4Ffgr7NdoaKAfMUfzmaQZV+42vwu2sXYpLFGOFuanVE1LkyfQuNJahqrjJPAJCOIb7ZnQvSZKDoczvAZjliOJfCCXA5A8rupJmGiTzQavPXbs8/8W99RaZ8i/9vjav6bS9hrEcnHob3aNkjdYaH7BpsEUNUXzqPpFaVbgYrHxIYrLhjivVZ1J5TD2UKK79ieaH6ejoFNV53rOgEV2wXcCpTra9Y=
+  skip_cleanup: true
