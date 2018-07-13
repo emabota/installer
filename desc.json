@@ -12,10 +12,7 @@
 	},
 	"files": [{
 		"includePattern": "./makeself/build/install-esaude-__RELEASE_VERSION__.run",
-		"uploadPattern": "install-esaude-__RELEASE_VERSION__.run",
-		"matrixParams": {
-			"override": 1
-		}
+		"uploadPattern": "install-esaude-__RELEASE_VERSION__.run"
 	}],
 	"publish": false
 }

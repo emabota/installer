@@ -1,21 +1,35 @@
 language: generic
 sudo: enabled
-install:
-- sudo apt update -y -qq && sudo apt install makeself -y -qq
-before_script:
-- ". ./get-latest-container-ver-num.sh"
-- "./pull-pkg-docker-containers.sh -a"
-- "./download-docker-releases.sh"
-script:
-- sed -i "s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" ./makeself/install-esaude/install-eSaude.sh
-- "./makeself/makeself.cmd"
-before_deploy:
-- ". ./makeself/install-esaude/get_version.sh"
-- sed -i "s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g;
+stages:
+- version_check
+
+- build
+  if: env(NEW_VERSION) > 0
+  
+stage: version_check
+  before_install:
+  - . ./compare-installer-vers-to-other-releases.sh
+
+stage: build
+  install:
+  - sudo apt update -y -qq && sudo apt install makeself -y -qq
+  
+  before_script:
+  - ". ./get-latest-container-ver-num.sh"
+  - "./pull-pkg-docker-containers.sh -a"
+  - "./download-docker-releases.sh"
+  
+  script:
+  - sed -i "s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" ./makeself/install-esaude/install-eSaude.sh
+  - "./makeself/makeself.cmd"
+  before_deploy:
+  - ". ./makeself/install-esaude/get_version.sh"
+  - sed -i "s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g;
   s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" desc.json
-deploy:
-  provider: bintray
-  file: desc.json
-  user: $BINTRAY_APIUSER
-  key: $BINTRAY_APIKEY
-  skip_cleanup: true
+
+  deploy:
+    provider: bintray
+    file: desc.json
+    user: $BINTRAY_APIUSER
+    key: $BINTRAY_APIKEY
+    skip_cleanup: true
