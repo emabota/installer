@@ -518,7 +518,7 @@ function install_docker {
 	if [ $? -eq 0 ]; then
 		output "Existing version of docker-ce found... checking version...\n"
 		compare_versions $(dpkg_version_installed docker-ce) $min_docker_version
-		if [ $? -eq 1 ]; then
+		if [ $? -ne 0 ]; then
 			output "Current version incompatible, upgrade required...\n"
 			upgrading_docker_version=1
 		else	
@@ -574,8 +574,8 @@ function install_docker {
 
 	               		if [ "$?" -eq 0 ]; then
 			                output "Docker dependency already installed... checking version...\n"
-			                compare_versions $(dpkg_version_installed ${pkg} ) ${min_ver}
-		        	        if [ $? -eq 1 ]; then
+			                compare_versions $(dpkg_version_installed ${pkg} ) ${ver_req}
+		        	        if [ $? -ne 0 ]; then
 			        	        output "Current version incompatible, installing newer version...\n"
                                         	install_pkg=1
 		                	else	
