@@ -3,6 +3,7 @@ sudo: enabled
   
 before_install:
   - . ./compare-installer-vers-to-other-releases.sh
+  - echo "\$FORCE_BUILD==$FORCE_BUILD, \$NEW_VERSION==$NEW_VERSION"
   - if [ "$FORCE_BUILD" == 0 ] && [ "$NEW_VERSION" == 0 ]; then exit 0; fi
 
 install:
