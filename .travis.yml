@@ -19,7 +19,10 @@ script:
   - "./makeself/makeself.cmd"
 
 before_deploy:
+  - . ./makeself/install-esaude/get_version.sh
+  - echo "\$installer_version==$installer_version"
   - sed -i "s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" desc.json
+  - cat desc.json
 
 deploy:
   provider: bintray
