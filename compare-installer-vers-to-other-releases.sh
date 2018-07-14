@@ -8,7 +8,7 @@ echo "Response: $prev_releases_versions"
 
 echo "using jq to parse response"
 
-new_installer_version=`echo "$prev_releases_versions" | jq '.name' | sed 's/"//g'`
+prev_installer_version=`echo "$prev_releases_versions" | jq '.name' | sed 's/"//g'`
 echo "\$new_installer_version==$new_installer_version"
 
 POC_Ver=`echo "$prev_releases_versions" | jq '.attributes.POC_Ver[]' | sed 's/"//g'`
@@ -17,9 +17,9 @@ echo "\$POC_Ver==$POC_Ver"
 Platform_Ver=`echo "$prev_releases_versions" | jq '.attributes.Platform_Ver[]' | sed 's/"//g'`
 echo "\$Platform_Ver==$Platform_Ver"
 
-min_ver=`echo $new_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
+min_ver=`echo $prev_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
 let "min_ver++"
-new_installer_version=`echo $new_installer_version | sed -r "s/\.[0-9]+\./$min_ver/"`
+new_installer_version=`echo $prev_installer_version | sed -r "s/\.[0-9]+\./\.$min_ver\./"`
 
 echo "installer_version=\"$new_installer_version\"" > ./makeself/install-esaude/get_version.sh
 
