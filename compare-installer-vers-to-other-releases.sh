@@ -9,7 +9,7 @@ echo "Response: $prev_releases_versions"
 echo "using jq to parse response"
 
 prev_installer_version=`echo "$prev_releases_versions" | jq '.name' | sed 's/"//g'`
-echo "\$new_installer_version==$new_installer_version"
+echo "\$prev_installer_version==$prev_installer_version"
 
 POC_Ver=`echo "$prev_releases_versions" | jq '.attributes.POC_Ver[]' | sed 's/"//g'`
 echo "\$POC_Ver==$POC_Ver"
