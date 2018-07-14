@@ -12,7 +12,7 @@ Platform_Ver=`echo "$this_releases_versions" | jq '.attributes.Platform_Ver[]' |
 
 min_ver=`echo $new_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
 let "min_ver++"
-new_installer_version=`echo $new_installer_version | sed -P "s/\.[0-9]+\./$min_ver/"`
+new_installer_version=`echo $new_installer_version | sed -r "s/\.[0-9]+\./$min_ver/"`
 
 echo "installer_version=$new_installer_version" > ./makeself/install-esaude/get_version.sh
 
