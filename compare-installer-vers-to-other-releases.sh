@@ -2,21 +2,20 @@
 . ./makeself/install-esaude/get_version.sh
 
 echo "Querying Bintray REST API"
-curl -u $BINTRAY_APIUSER:$BINTRAY_APIKEY https://api.bintray.com/packages/esaude/installer/installer/versions/_latest --data attribute_values=1
-this_releases_versions=`curl -u $BINTRAY_APIUSER:$BINTRAY_APIKEY https://api.bintray.com/packages/esaude/installer/installer/versions/_latest --data attribute_values=1 -G`
+prev_releases_versions=`curl -u $BINTRAY_APIUSER:$BINTRAY_APIKEY https://api.bintray.com/packages/esaude/installer/installer/versions/_latest --data attribute_values=1 -G`
 
-echo "Response: $this_releases_versions"
+echo "Response: $prev_releases_versions"
 
 echo "using jq to parse response"
 
-new_installer_version=`echo "$this_releases_versions" | jq '.name[]' | sed 's/"//g'`
+new_installer_version=`echo "$prev_releases_versions" | jq '.name' | sed 's/"//g'`
 echo "\$new_installer_version==$new_installer_version"
 
-POC_Ver=`echo "$this_releases_versions" | jq '.attributes.POC_Ver[]' | sed 's/"//g'`
+POC_Ver=`echo "$prev_releases_versions" | jq '.attributes.POC_Ver[]' | sed 's/"//g'`
 echo "\$POC_Ver==$POC_Ver"
 
-Platform_Ver=`echo "$this_releases_versions" | jq '.attributes.Platform_Ver[]' | sed 's/"//g'`
-echo "\$Platform_Ver==$Platform_ver"
+Platform_Ver=`echo "$prev_releases_versions" | jq '.attributes.Platform_Ver[]' | sed 's/"//g'`
+echo "\$Platform_Ver==$Platform_Ver"
 
 min_ver=`echo $new_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
 let "min_ver++"
