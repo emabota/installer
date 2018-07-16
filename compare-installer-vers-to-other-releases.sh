@@ -23,13 +23,26 @@ echo "\$Platform_Ver==$Platform_Ver"
 min_ver=`echo $prev_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
 let "min_ver++"
 
-code_fix_ver=`echo $installer_version | grep -P '(?<=\.)[0-9|(rc|b|a)]+(?=$)' -o`
+echo "current code-local installer version is $installer_version"
+
+code_fix_ver=`echo $installer_version | grep -P '(?<=\.)[0-9]+|(rc|b|a){1}(?=$)' -o`
+echo "code local fix version is $code_fix_ver"
+
 rel_fix_ver=`echo $prev_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
+echo "release fix version is $rel_fix_ver"
 
 dpkg --compare-versions "$rel_fix_ver" ge "$code_fix_ver" 
 code_req="$?"
 
-new_installer_version=`echo $prev_installer_version | sed -r "s/\.[0-9]+\./\.$min_ver\./"`
+#default to release fix version number
+fix_ver=$rel_fix_ver
+
+#if code fix version number is newer, use it instead
+if [ "$code_req" > 0 ]; then
+	fix_ver=$code_fix_ver
+fi
+
+new_installer_version=`echo $prev_installer_version | sed -r "s/\.[0-9]+\.([0-9]+|(rc|a|b)){1}/\.$min_ver\./$fix_ver"`
 
 echo "installer_version=\"$new_installer_version\"" > ./makeself/install-esaude/get_version.sh
 
