@@ -3,13 +3,14 @@ sudo: enabled
   
 before_install:
   - . ./compare-installer-vers-to-other-releases.sh
-  - echo "\$FORCE_BUILD==$FORCE_BUILD, \$NEW_VERSION==$NEW_VERSION"
+  - echo "\$FORCE_BUILD==$FORCE_BUILD, \$NEW_VERSION==$NEW_VERSION, \$latest_mysql=$latest_mysql, \$latest_tomcat=$latest_tomcat, \$latest_poc=$latest_poc"
   - if [ "$FORCE_BUILD" == 0 ] && [ "$NEW_VERSION" == 0 ]; then exit 0; fi
 
 install:
   - sudo apt update -y -qq && sudo apt install makeself -y -qq
   
-before_script:      
+before_script: 
+  - if [ "$FORCE_BUILD" != 0 ]; then echo "get latest script will be using supplied \$latest_vars instead of checking bintray"; fi
   - ". ./get-latest-container-ver-num.sh"
   - "./pull-pkg-docker-containers.sh -a"
   - "./download-docker-releases.sh"
