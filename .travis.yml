@@ -24,6 +24,8 @@ before_deploy:
   - echo "\$installer_version==$installer_version"
   - sed -i "s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" desc.json
   - cat desc.json
+  - cd makeself/build
+  - ./install-esaude-${installer_version}.run
 
 deploy:
   provider: bintray
