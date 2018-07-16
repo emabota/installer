@@ -72,8 +72,8 @@ docker_depends_pkgs=(libltdl7 libsystemd-journal0 libseccomp2)
 trusty_docker_depends_vers=("2.4.2" "201" "0")
 
 recent_docker_depends_vers=("2.4.6" "0" "2.3.0")
-xenial_docker_depends_vers=$recent_docker_depends_vers
-bionic_docker_depends_vers=$recent_docker_depends_vers
+xenial_docker_depends_vers=(${recent_docker_depends_vers[*]})
+bionic_docker_depends_vers=(${recent_docker_depends_vers[*]})
 
 trusty_requires=(1 1 0)
 xenial_requires=(1 0 1)

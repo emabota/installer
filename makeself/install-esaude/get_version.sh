@@ -1,1 +1,1 @@
-installer_version="1.0.1"
+installer_version="1.0.2"
