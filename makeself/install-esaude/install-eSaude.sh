@@ -543,8 +543,12 @@ function install_docker {
 		        	mkdir "$ubuntu_codename"
 			fi
 			sudo wget -r -l1 -np -nd -P "$ubuntu_codename" "$docker_download_url" --progress=dot -A "$docker_download_glob"
+			
+			exit_code="$?"
 
-			if [ -s "${docker_installer}" ]; then
+			docker_installer=`ls $ubuntu_codename/$docker_filename`
+			
+			if [ "$exit_code" -eq 0 ] && [ -s "${docker_installer}" ]; then
 				output "Docker installer successfully downloaded...\n"
 			else
 				output "Docker installer not successfully downloaded...\n"
