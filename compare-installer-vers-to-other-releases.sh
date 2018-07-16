@@ -22,6 +22,8 @@ echo "\$Platform_Ver==$Platform_Ver"
 
 min_ver=`echo $prev_installer_version | grep -P '(?<=\.)[0-9]+(?=\.)' -o`
 
+let "min_ver++"
+
 echo "current code-local installer version is $installer_version"
 
 split_ver='[0-9]+(-(rc|a|b){1})?'
@@ -84,8 +86,6 @@ fix_ver=$rel_fix_ver
 #if code fix version number is newer, use it instead
 if [ "$code_req" > 0 ]; then
 	fix_ver=$code_fix_ver
-else
-	let "min_ver++"
 fi
 
 echo "using .$min_ver.$fix_ver for min.fix ver"
