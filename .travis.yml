@@ -2,6 +2,7 @@ language: generic
 sudo: enabled
   
 before_install:
+  - if [ "$PREVENT_BUILD" == 1 ]; then exit 0; fi
   - . ./compare-installer-vers-to-other-releases.sh
   - echo "\$FORCE_BUILD==$FORCE_BUILD, \$NEW_VERSION==$NEW_VERSION, \$latest_mysql=$latest_mysql, \$latest_tomcat=$latest_tomcat, \$latest_poc=$latest_poc"
   - if [ "$FORCE_BUILD" == 0 ] && [ "$NEW_VERSION" == 0 ]; then exit 0; fi
