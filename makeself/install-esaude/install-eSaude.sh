@@ -14,7 +14,7 @@ fi
 printf "\nA log file will be created to capture the progress of this process.\nThe file will be created in the installer directory with the name:\n${LOG_FILE}\n" | tee /dev/fd/3
 
 double_line="=================================================="
-software_name="eSaúde Platform & EMR POC"
+software_name="eSaúde Platform v__TOMCAT_VERSION__ & EMR POC v__POC_VERSION__"
 
 . ./get_version.sh
 

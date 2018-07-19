@@ -1,11 +1,12 @@
 {
 	"package": {
-		"name":"installer",
-		"repo":"installer",
-		"subject":"esaude"
+		"name": "installer",
+		"repo": "installer",
+		"subject": "esaude"
 	},
 	"version": {
 		"name": "__RELEASE_VERSION__",
+		"desc": "Contains eSaude Platform v__TOMCAT_VERSION__ and POC v__POC_VERSION__",
 		"attributes": 
 			[{"name": "POC_Ver", "values": ["__POC_VERSION__"], "type":"string"},
 			 {"name": "Platform_Ver","values":["__TOMCAT_VERSION__"], "type":"string"}]		
@@ -14,5 +15,5 @@
 		"includePattern": "./makeself/build/install-esaude-__RELEASE_VERSION__.run",
 		"uploadPattern": "install-esaude-__RELEASE_VERSION__.run"
 	}],
-	"publish": false
+	"publish": true
 }
