@@ -27,6 +27,9 @@ done
 req_dist_release='Ubuntu 1(8|6|4)\.04(\.[0-9]+)? LTS' 
 platform_name_version=`/usr/bin/lsb_release -sd`
 
+os_release_version=`lsb_release -rs`
+os_release_min_version='14.04.4'
+
 dpkg_req_arch='amd64'
 dpkg_OS_arch=`dpkg --print-architecture`
 
@@ -319,6 +322,21 @@ function locate_tomcat_version {
         if [ $count -gt 1 ]; then
 		output "\nMultiple OpenMRS webapp directories found, not supported.\n"
 		quit
+	fi
+
+
+	if [ "$new_install" -eq 1 ]; then
+		
+		output "Verifying new installation prerequisite(s) met... "
+		
+		compare_versions $os_release_version $os_release_min_version
+
+		if [ $? -ne 0 ]; then
+			output "New Installations require at least Ubuntu 14.04.4, please upgrade Ubuntu and try again."
+			quit	
+		else
+			output "Supported OS version detected"
+		fi
 	fi
 
 }
@@ -616,7 +634,7 @@ function install_docker {
 	#same for docker_compose
 	install_docker_compose=1
 	upgrading_docker_compose_version=0
-
+	
 	output "\nChecking for docker...\n"
 
 	dpkg_detect_installed docker 
