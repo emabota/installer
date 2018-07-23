@@ -11,14 +11,18 @@ if [[ ! $(sudo echo 0) ]]; then
 	exit $?
 fi
 
-printf "\nA log file will be created to capture the progress of this process.\nThe file will be created in the installer directory with the name:\n${LOG_FILE}\n" | tee /dev/fd/3
-
-double_line="=================================================="
-software_name="eSaúde Platform v__TOMCAT_VERSION__ & EMR POC v__POC_VERSION__"
+printf "\nA log file will be created to capture the progress of this process.\nThe file will be created in the 'log' directory with the name:\n${LOG_FILE}\n" | tee /dev/fd/3
 
 . ./get_version.sh
 
 script_version=$installer_version
+
+software_name="eSaúde Installer v$script_version including Platform v__TOMCAT_VERSION__ & EMR POC v__POC_VERSION__"
+dl_len=${#software_name}
+double_line=""
+while [ ${#double_line} -lt $dl_len ] ; do
+        double_line="${double_line}="
+done
 
 req_dist_release='Ubuntu 1(8|6|4)\.04(\.[0-9]+)? LTS' 
 platform_name_version=`/usr/bin/lsb_release -sd`
@@ -100,6 +104,10 @@ mysql_db=""
 
 clean_database_script_path="common/clean-database-dump.sh"
 cleaned_database_backup="openmrs_backup_${backup_timestamp}_clean.sql"
+
+validate_db="omrs_validate"
+validate_user="debian-sys-maint"
+validate_pass=""
 
 local_platform_mysql_image="common/esaude-platform-mysql-docker-__MYSQL_VERSION__.tar.gz"
 platform_mysql_name="esaude-docker-platform-docker.bintray.io/mysql:__MYSQL_VERSION__"
@@ -209,7 +217,7 @@ function remove_previous_install {
 		output "eSaúde EMR POC container not found...\n"
 	fi
 
-	if [ "$mysql_ver" = "1.4.4" ] || [ "$tomcat_ver" = "1.4.4" ] || [ "$poc_ver" = "2.0.0" ]; then
+	if [ "$mysql_ver" = "__TOMCAT_VERSION__" ] || [ "$tomcat_ver" = "__TOMCAT_VERSION__" ] || [ "$poc_ver" = "__POC_VERSION__" ]; then
 		output "\nCurrent version(s) of eSaúde Platform container(s) found, possibly from a previous install attempt...\n"
 		get_confirmation "Would you like to remove them and re-install? [NO/yes] "
 		if [ $mysql_res -ne 0 ]; then
@@ -403,8 +411,16 @@ function get_mysql_root_credentials {
 	mysql_pass_regex="\"MYSQL_ROOT_PASSWORD="
 	mysql_db_regex="\"MYSQL_DATABASE="
 
-	mysql_pass=$(sudo docker container inspect esaude-platform-mysql | grep -m1 $mysql_pass_regex | awk -F '=' '{print $2}' | awk -F '"' '{print $1}')
-	mysql_db=$(sudo docker container inspect esaude-platform-mysql | grep -m1 $mysql_db_regex | awk -F '=' '{print $2}' | awk -F '"' '{print $1}')
+	mysql_pass=$(sudo docker container inspect esaude-platform-mysql | grep -m1 $mysql_pass_regex | awk -F "$mysql_pass_regex" '{print $2}' | awk -F '"' '{print $1}')
+	mysql_db=$(sudo docker container inspect esaude-platform-mysql | grep -m1 $mysql_db_regex | awk -F "$mysql_db_regex" '{print $2}' | awk -F '"' '{print $1}')
+
+}
+
+function get_mysql_validate_credentials {
+
+	mysql_pass_regex="password ="
+
+	validate_pass=$(sudo grep -m1 "$mysql_pass_regex" /etc/mysql/debian.cnf | cut -c12-)
 
 }
 
@@ -418,8 +434,8 @@ function backup_database {
 
         if [ $existing_containers -eq 1 ]; then
                 get_mysql_root_credentials
-                eval "sudo docker exec esaude-platform-mysql sh -c 'mysqldump --hex-blob --routines --triggers -uroot -p$mysql_pass --databases $mysql_db > /tmp/dump.sql'"
-                eval "sudo docker cp esaude-platform-mysql:/tmp/dump.sql ./$database_backup"
+                eval "sudo docker exec esaude-platform-mysql sh -c 'mysqldump --hex-blob --routines --triggers -uroot -p$mysql_pass --databases $mysql_db > /tmp/$database_backup'"
+                eval "sudo docker cp esaude-platform-mysql:/tmp/$database_backup ."
         else
 	        if ! hash mysqldump &> /dev/null; then
 	        	mysqldump_cmd="$local_mysqldump_path"
@@ -466,6 +482,113 @@ function clean_backup {
 		quit
 	fi
 
+}
+
+function cleanup_validation_artifacts {
+
+        if [ $existing_containers -eq 1 ]; then
+
+	        sudo docker exec esaude-platform-mysql rm /tmp/$cleaned_database_backup
+
+                if [ -z "$mysql_pass" ] || [ -z "$mysql_db" ]; then
+                        get_mysql_root_credentials
+                fi
+
+                sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass -e "drop database if exists $validate_db;"
+
+        else
+                
+                if [ -z "$validate_pass" ]; then
+                        get_mysql_validate_credentials
+                fi
+
+                eval "mysql -u'$validate_user' -p'$validate_pass' -e \"drop database if exists $validate_db;\""
+
+        fi
+
+}
+
+function validate_backup {
+
+	if [ $new_install -eq 1 ]; then
+		return 0
+	fi
+
+	if [ -s "$database_backup" ]; then
+
+	        output "\nAttempting to validate database backup..."
+
+                if [ $existing_containers -eq 1 ]; then
+
+	                sudo docker cp ./$cleaned_database_backup esaude-platform-mysql:/tmp/$cleaned_database_backup
+	                res=$(sudo docker exec esaude-platform-mysql ls -l /tmp/$cleaned_database_backup | wc -l)
+	                if [ $res -ne 1 ]; then
+		                output " failed...\n"
+                                cleanup_validation_artifacts
+		                quit
+	                fi
+
+                        if [ -z "$mysql_pass" ] || [ -z "$mysql_db" ]; then
+                                get_mysql_root_credentials
+                        fi
+
+	                sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass -e "create database $validate_db CHARACTER SET utf8 COLLATE utf8_general_ci;"
+	                eval "sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $validate_db -e \"source /tmp/$cleaned_database_backup;\""
+	                if [ $? -ne 0 ]; then
+		                output " failed...\n"
+                                cleanup_validation_artifacts
+		                quit
+	                fi
+
+	                original_table_cnt=$(sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass openmrs -e "show tables;" | wc -l)
+	                restored_table_cnt=$(sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $validate_db -e "show tables;" | wc -l)
+	                if [ $restored_table_cnt -lt 10 ] || [ $original_table_cnt -ne $restored_table_cnt ]; then
+		                output " failed...\n"
+                                cleanup_validation_artifacts
+		                quit
+                        else
+                                output " success...\n"
+                                cleanup_validation_artifacts
+	                fi
+
+                else
+                
+	                if [ -s "/etc/mysql/debian.cnf" ]; then
+                                if [ -z "$validate_pass" ]; then
+                                        get_mysql_validate_credentials
+                                fi
+
+       	                        eval "mysql -u'$validate_user' -p'$validate_pass' -e \"create database $validate_db CHARACTER SET utf8 COLLATE utf8_general_ci;\""
+       	                        eval "mysql -u'$validate_user' -p'$validate_pass' $validate_db -e \"source $cleaned_database_backup;\""
+	                        if [ $? -ne 0 ]; then
+		                        output " failed...\n"
+                                        cleanup_validation_artifacts
+		                        quit
+	                        fi
+
+	                        original_table_cnt=$(mysql -u$omrs_user -p$omrs_pass openmrs -e "show tables;" | wc -l)
+	                        restored_table_cnt=$(mysql -u$validate_user -p$validate_pass $validate_db -e "show tables;" | wc -l)
+	                        if [ $restored_table_cnt -lt 10 ] || [ $original_table_cnt -ne $restored_table_cnt ]; then
+		                        output " failed...\n"
+                                        cleanup_validation_artifacts
+		                        quit
+                                else
+                                        output " success...\n"
+                                        cleanup_validation_artifacts
+	                        fi
+
+                        else
+                                output " not possible... skipping...\n"
+
+                        fi
+
+                fi
+
+	else
+		output "\nDatabase backup file '$database_backup' not found...\n"
+		quit
+	fi
+ 
 }
 
 function dpkg_detect_installed {
@@ -857,7 +980,7 @@ function restore_database_backup {
                 get_mysql_root_credentials
         fi
 
-	sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $mysql_db -e "drop database openmrs; create database openmrs;"
+	sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass -e "drop database if exists openmrs; create database openmrs CHARACTER SET utf8 COLLATE utf8_general_ci;"
 	eval "sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $mysql_db -e \"source /tmp/$cleaned_database_backup;\""
 	if [ $? -eq 0 ]; then
 		output " done...\n"
@@ -1009,7 +1132,7 @@ function instruct_next_steps {
 
 function main {
 
-	output "\n$double_line\n$software_name Installer v$script_version\n$double_line\n"
+	output "\n$double_line\n$software_name\n$double_line\n"
 
 	checkOS
 
@@ -1026,6 +1149,8 @@ function main {
 	backup_database
 
 	clean_backup
+        
+        validate_backup
 
 	install_docker
 

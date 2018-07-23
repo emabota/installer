@@ -7,6 +7,6 @@ pushd $path_to_here
 mkdir install-esaude/log -p
 mkdir build -p
 
-makeself --notemp --follow install-esaude/ build/install-esaude-${installer_version}.run "eSaúde Platform & EMR POC v${installer_version}" ./install-eSaude.sh
+makeself --notemp --follow install-esaude/ build/install-esaude-${installer_version}.run "eSaúde Installer v${installer_version}" ./install-eSaude.sh
 
 popd

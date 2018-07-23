@@ -25,7 +25,7 @@ before_deploy:
   - echo "\$installer_version==$installer_version"
   - sed -i "s/__RELEASE_VERSION__/$installer_version/g; s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" desc.json
   - cat desc.json
-  # not useful with limit of 50m (also only trust available)
+  # not useful with limit of 50m (also only trusty available)
   #- cd makeself/build
   #- yes yes | ./install-esaude-${installer_version}.run
 
