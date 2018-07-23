@@ -38,7 +38,7 @@ Run the following in your cloned version of the repo to build the installer pack
 
 cd makeself
  
-sed install-esaude/install-eSaude.sh "s/__TOMCAT_VERSION__/$latest_tomcat/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__POC_VERSION__/$latest_poc/g"
+sed -i "s/__POC_VERSION__/$latest_poc/g; s/__MYSQL_VERSION__/$latest_mysql/g; s/__TOMCAT_VERSION__/$latest_tomcat/g" ./makeself/install-esaude/install-eSaude.sh
 
 ./makeself.cmd
 ```
