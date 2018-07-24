@@ -41,6 +41,9 @@ system_processor=`uname -p`
 machine_type=`uname -m`
 system_type=`uname -s`
 
+kernel_min_ver="4.0"
+kernel_ver=`uname -r`
+
 docker_compose_url="https://github.com/docker/compose/releases/download/1.21.0/docker-compose-$system_type-$machine_type"
 
 docker_compose_path='/usr/local/bin/docker-compose'
@@ -329,16 +332,26 @@ function locate_tomcat_version {
 
 	if [ "$new_install" -eq 1 ]; then
 		
-		output "Verifying new installation prerequisite(s) met... "
+		output "Verifying new installation prerequisite(s) met... \n"
 		
 		compare_versions $os_release_version $os_release_min_version
 
 		if [ $? -ne 0 ]; then
 			output "Unsupported OS version $os_release_version detected.\n"
-			output "New Installations require at least Ubuntu $os_release_min_version, please upgrade Ubuntu and try again.\n"
+			output "New Installations require at least Ubuntu distribution $os_release_min_version, with kernel $kernel_min_ver please consider upgrading Ubuntu dist (apt dist-upgrade) and try again.\n"
 			quit	
 		else
-			output "Supported OS version detected.\n"
+			output "Supported OS version $os_release_version detected.\n"
+		fi
+
+		compare_versions $kernel_ver $kernel_min_ver
+
+		if [ $? -ne 0 ]; then
+			output "Unsupported kernel release $kernel_ver detected.\n"
+			output "New Installations require at least kernel release $kernel_min_ver.\n"
+			quit
+		else
+			output "Supported kernel release $kernel_ver detected.\n"
 		fi
 	fi
 
