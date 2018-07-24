@@ -24,10 +24,12 @@ while [ ${#double_line} -lt $dl_len ] ; do
         double_line="${double_line}="
 done
 
-req_dist_release='Ubuntu 1(8|6|4)\.04(\.[0-9]+)? LTS' 
+ubuntu_ver_regex='1(8|6|4)\.04(\.[0-9]+)?'
+
+req_dist_release="Ubuntu $ubuntu_ver_regex LTS"
 platform_name_version=`/usr/bin/lsb_release -sd`
 
-os_release_version=`lsb_release -rs`
+os_release_version=`echo "$platform_name_version" | grep -P "$ubuntu_ver_regex" -o`
 os_release_min_version='14.04.4'
 
 dpkg_req_arch='amd64'
@@ -332,10 +334,11 @@ function locate_tomcat_version {
 		compare_versions $os_release_version $os_release_min_version
 
 		if [ $? -ne 0 ]; then
-			output "New Installations require at least Ubuntu 14.04.4, please upgrade Ubuntu and try again."
+			output "Unsupported OS version $os_release_version detected.\n"
+			output "New Installations require at least Ubuntu $os_release_min_version, please upgrade Ubuntu and try again.\n"
 			quit	
 		else
-			output "Supported OS version detected"
+			output "Supported OS version detected.\n"
 		fi
 	fi
 
