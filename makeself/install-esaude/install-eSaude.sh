@@ -29,9 +29,6 @@ ubuntu_ver_regex='1(8|6|4)\.04(\.[0-9]+)?'
 req_dist_release="Ubuntu $ubuntu_ver_regex LTS"
 platform_name_version=`/usr/bin/lsb_release -sd`
 
-os_release_version=`echo "$platform_name_version" | grep -P "$ubuntu_ver_regex" -o`
-os_release_min_version='14.04.4'
-
 dpkg_req_arch='amd64'
 dpkg_OS_arch=`dpkg --print-architecture`
 
@@ -52,6 +49,8 @@ local_docker_compose_path='common/docker-compose'
 new_install=0 # assume upgrade, but allow for new install, if so desired
 
 new_install_confirm_text="Is this a brand new install without an existing copy of OpenMRS running?\nIf so, this process will continue to install the eSaúde Platform without backing up or restoring a database.\nIs that what you want to do? [NO/yes] "
+
+upgrade_inst="Warning: Kernel upgrades could require updates to drivers and other system software.\nPlease consider your kernel upgrade options, such as \"sudo apt install linux-image-generic-lts-xenial\", and then trying the installation again.\n"
 
 server_alert_text="THIS PROCESS SHOULD ONLY BE RUN ON A DEDICATED UPGRADE SERVER!\nAVOID UPGRADING A LIVE PRODUCTION SERVER AS DATA LOSS MAY OCCUR!\nAre you sure you want to continue? [NO/yes] "
 
@@ -334,19 +333,6 @@ function locate_tomcat_version {
 		
 		output "Verifying new installation prerequisite(s) met... \n"
 		
-		upgrade_inst="Please consider upgrading Ubuntu with \"apt-get dist-upgrade\" and trying installation again.\n"
-		
-		compare_versions $os_release_version $os_release_min_version
-
-		if [ $? -ne 0 ]; then
-			output "Unsupported OS version $os_release_version detected.\n"
-			output "New Installations require at least Ubuntu release $os_release_min_version with kernel release $kernel_min_ver.\n" 
-			output "$upgrade_inst"
-			quit	
-		else
-			output "Supported OS version $os_release_version detected.\n"
-		fi
-
 		compare_versions $kernel_ver $kernel_min_ver
 
 		if [ $? -ne 0 ]; then
