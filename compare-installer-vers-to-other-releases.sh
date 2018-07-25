@@ -97,9 +97,9 @@ echo "installer_version=\"$new_installer_version\"" > ./makeself/install-esaude/
 echo "cat'ing new get_version.sh to console"
 cat ./makeself/install-esaude/get_version.sh
 
-dpkg --compare-versions "$POC_Ver" ge "$latest_poc"
+dpkg --compare-versions "$POC_Ver" ne "$latest_poc"
 poc_req="$?"
-dpkg --compare-versions "$Platform_Ver" ge "$latest_tomcat" 
+dpkg --compare-versions "$Platform_Ver" ne "$latest_tomcat" 
 plat_req="$?"
 
 echo "\$poc_req=$poc_req, \$plat_req=$plat_req, \$code_req=$code_req"

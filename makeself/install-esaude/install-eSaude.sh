@@ -336,9 +336,12 @@ function locate_tomcat_version {
 		
 		compare_versions $os_release_version $os_release_min_version
 
+		upgrade_inst="Please consider upgrading Ubuntu with \"apt-get dist-upgrade\" and trying installation again.\n"
+
 		if [ $? -ne 0 ]; then
 			output "Unsupported OS version $os_release_version detected.\n"
-			output "New Installations require at least Ubuntu distribution $os_release_min_version, with kernel $kernel_min_ver please consider upgrading Ubuntu dist (apt dist-upgrade) and try again.\n"
+			output "New Installations require at least Ubuntu release $os_release_min_version with kernel release $kernel_min_ver.\n" 
+			output $upgrade_inst
 			quit	
 		else
 			output "Supported OS version $os_release_version detected.\n"
@@ -349,6 +352,8 @@ function locate_tomcat_version {
 		if [ $? -ne 0 ]; then
 			output "Unsupported kernel release $kernel_ver detected.\n"
 			output "New Installations require at least kernel release $kernel_min_ver.\n"
+			output $upgrade_inst
+			
 			quit
 		else
 			output "Supported kernel release $kernel_ver detected.\n"
