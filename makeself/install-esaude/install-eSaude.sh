@@ -58,6 +58,8 @@ service_alert_text="This process requires shutting down any running services.\nA
 
 docker_delete_confirm_text="This process will delete all existing docker containers related to eSaúde.\nAny data that has not been backed up will be lost permanently and forever.\nPlease confirm that you have completed a successful database backup and that you would like to continue with this operation. [NO/yes] "
 
+disabling_service_error="Error stopping service!\nPlease verify any issues and handle them appropriately before a reboot of the system.\n"
+
 next_steps_text="The system should now be ready for use.\nIt is important that you login and verify that all the OpenMRS modules are up\nand running.\nIf there isn’t any official information from the eSaúde community stating that\na certain module is susceptible of being stopped/down, please contact the\nUC Global Programs Support Team.\nIf all the modules are up/running, congratulations, you have successfully\ninstalled/upgraded the eSaúde Platform & EMR POC.\nAt this point, if everything above went well, the upgrade was successful. You\ncan proceed with the next steps to deploy the upgraded database on the\nproduction environment."
 
 existing_containers=0 # assume no existing docker containers, but allow for them
@@ -174,7 +176,7 @@ function checkOS {
 	fi
 
 	output "\nChecking for processor requirements..."
-	if [ $system_processor = $req_processor ]; then
+	if [ "$system_processor" = "$req_processor" ]; then
 		output " 64-bit processor detected.\n"
 	else
 		output " non 64-bit processor detected.\n"
@@ -182,7 +184,7 @@ function checkOS {
 	fi
 
 	output "\nChecking for 64-bit OS..."
-	if [ $dpkg_OS_arch = $dpkg_req_arch ]; then
+	if [ "$dpkg_OS_arch" = "$dpkg_req_arch" ]; then
 		output " 64-bit OS detected.\n"
 	else
 		output " non 64-bit OS detected.\n"
@@ -201,7 +203,7 @@ function remove_previous_install {
 	output "\nLooking for any existing eSaúde Platform container(s)...\n"
 
 	mysql_res=$(sudo docker ps -aq --filter 'name=esaude-platform-mysql' | wc -l)
-	if [ $mysql_res -ne 0 ]; then
+	if [ "$mysql_res" -ne 0 ]; then
 		mysql_ver=$(sudo docker container inspect esaude-platform-mysql | grep -i '/mysql:' | awk -F ':' '{print $3}' | awk -F '"' '{print $1}')
 		output "Platform MySQL container version $mysql_ver found...\n"
 	else
@@ -209,7 +211,7 @@ function remove_previous_install {
 	fi
 
 	tomcat_res=$(sudo docker ps -aq --filter 'name=esaude-platform-tomcat' | wc -l)
-	if [ $tomcat_res -ne 0 ]; then
+	if [ "$tomcat_res" -ne 0 ]; then
 		tomcat_ver=$(sudo docker container inspect esaude-platform-tomcat | grep -i '/tomcat:' | awk -F ':' '{print $3}' | awk -F '"' '{print $1}')
 		output "Platform Tomcat container version $mysql_ver found...\n"
 	else
@@ -217,7 +219,7 @@ function remove_previous_install {
 	fi
 
 	poc_res=$(sudo docker ps -aq --filter 'name=esaude-emr-poc' | wc -l)
-	if [ $poc_res -ne 0 ]; then
+	if [ "$poc_res" -ne 0 ]; then
 		poc_ver=$(sudo docker container inspect esaude-emr-poc | grep -i '/poc:' | awk -F ':' '{print $3}' | awk -F '"' '{print $1}')
 		output "eSaúde EMR POC container version $poc_ver found...\n"
 	else
@@ -227,9 +229,9 @@ function remove_previous_install {
 	if [ "$mysql_ver" = "__TOMCAT_VERSION__" ] || [ "$tomcat_ver" = "__TOMCAT_VERSION__" ] || [ "$poc_ver" = "__POC_VERSION__" ]; then
 		output "\nCurrent version(s) of eSaúde Platform container(s) found, possibly from a previous install attempt...\n"
 		get_confirmation "Would you like to remove them and re-install? [NO/yes] "
-		if [ $mysql_res -ne 0 ]; then
+		if [ "$mysql_res" -ne 0 ]; then
 			res=$(sudo docker stop $(sudo docker ps -aq --filter 'name=esaude-platform-mysql') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "\nStopped Platform MySQL container...\n"
 			else
 				output "\nFailed to stop Platform MySQL container...\n"
@@ -237,7 +239,7 @@ function remove_previous_install {
 			fi
 
 			res=$(sudo docker rm $(sudo docker ps -aq --filter 'name=esaude-platform-mysql') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Removed Platform MySQL container...\n"
 			else
 				output "Failed to remove Platform MySQL container...\n"
@@ -245,9 +247,9 @@ function remove_previous_install {
 			fi
 		fi
 
-		if [ $tomcat_res -ne 0 ]; then
+		if [ "$tomcat_res" -ne 0 ]; then
 			res=$(sudo docker stop $(sudo docker ps -aq --filter 'name=esaude-platform-tomcat') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Stopped Platform Tomcat container...\n"
 			else
 				output "Failed to stop Platform Tomcat container...\n"
@@ -255,7 +257,7 @@ function remove_previous_install {
 			fi
 
 			res=$(sudo docker rm $(sudo docker ps -aq --filter 'name=esaude-platform-tomcat') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Removed Platform Tomcat container...\n"
 			else
 				output "Failed to remove Platform Tomcat container...\n"
@@ -263,9 +265,9 @@ function remove_previous_install {
 			fi
 		fi
 
-		if [ $poc_res -ne 0 ]; then
+		if [ "$poc_res" -ne 0 ]; then
 			res=$(sudo docker stop $(sudo docker ps -aq --filter 'name=esaude-emr-poc') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Stopped EMR POC container...\n"
 			else
 				output "Failed to stop EMR POC container...\n"
@@ -273,7 +275,7 @@ function remove_previous_install {
 			fi
 
 			res=$(sudo docker rm $(sudo docker ps -aq --filter 'name=esaude-emr-poc') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Removed EMR POC container...\n"
 			else
 				output "Failed to remove EMR POC container...\n"
@@ -293,9 +295,9 @@ function locate_tomcat_version {
 
         # check for any existing (and running) Tomcat docker containers
 	dpkg_detect_installed docker-ce
-	if [ $? -eq 0 ]; then
+	if [ "$?" -eq 0 ]; then
 	        res=$(sudo docker ps -q --filter 'name=esaude-platform-tomcat' | wc -l)
-	        if [ $res -ne 0 ]; then
+	        if [ "$res" -ne 0 ]; then
                         existing_containers=1
                         let "count++"
                 fi
@@ -309,13 +311,13 @@ function locate_tomcat_version {
                 fi
 	done
 
-	if [ $count -eq 0 ]; then
+	if [ "$count" -eq 0 ]; then
 		output "\nOpenMRS webapp directory not found...\n"
 
 		get_confirmation "$new_install_confirm_text"
 
 		let "new_install=1"
-	elif [ $count -eq 1 ]; then
+	elif [ "$count" -eq 1 ]; then
                 if [ $existing_containers -eq 1 ]; then
                         tomcat_version="tomcat7"
                 else
@@ -323,7 +325,7 @@ function locate_tomcat_version {
                 fi
         fi
 
-        if [ $count -gt 1 ]; then
+        if [ "$count" -gt 1 ]; then
 		output "\nMultiple OpenMRS webapp directories found, not supported.\n"
 		quit
 	fi
@@ -331,11 +333,11 @@ function locate_tomcat_version {
 
 	if [ "$new_install" -eq 1 ]; then
 		
-		output "Verifying new installation prerequisite(s) met... \n"
+		output "\nVerifying new installation prerequisite(s) met... \n"
 		
 		compare_versions $kernel_ver $kernel_min_ver
 
-		if [ $? -ne 0 ]; then
+		if [ "$?" -ne 0 ]; then
 			output "Unsupported kernel release $kernel_ver detected.\n"
 			output "New Installations require at least kernel release $kernel_min_ver.\n"
 			output "$upgrade_inst"
@@ -350,7 +352,7 @@ function locate_tomcat_version {
 
 function locate_runtime_props {
 
-	if [ $new_install -eq 1 ]; then
+	if [ "$new_install" -eq 1 ]; then
 		return 0
 	fi
 
@@ -360,7 +362,7 @@ function locate_runtime_props {
 	connection_password_regex="^connection.password\s*="
 
         # if existing Tomcat container, count it
-	if [ $existing_containers -eq 1 ]; then
+	if [ "$existing_containers" -eq 1 ]; then
                 omrs_app_dir_cmds[$count]="sudo docker exec esaude-platform-tomcat cat /usr/local/tomcat/openmrs-runtime.properties"
                 let "count++"
         fi
@@ -370,6 +372,8 @@ function locate_runtime_props {
 		if [ -e "$f" ]; then
                         omrs_app_dir_cmds[$count]="sudo cat $f"
                         let "count++"
+
+						tomcat_version=`echo $f | grep -Eo tomcat[0-9]+`
                 fi
 	done
 
@@ -380,7 +384,7 @@ function locate_runtime_props {
                 fi
 	done
 
-	if [ $count -eq 0 ]; then
+	if [ "$count" -eq 0 ]; then
 		output "\nOpenMRS application directory not found...\n"
 
                 get_confirmation "$new_install_confirm_text"
@@ -388,7 +392,7 @@ function locate_runtime_props {
 		let "new_install=1"
 
                 return 0
-	elif [ $count -eq 1 ]; then
+	elif [ "$count" -eq 1 ]; then
 		omrs_runtime_properties_cmd=${omrs_app_dir_cmds[0]}
 
                 # populate $omrs_user and $omrs_pass from native runtime properties file
@@ -401,7 +405,7 @@ function locate_runtime_props {
                 fi
         fi
 
-        if [ $count -gt 1 ]; then
+    if [ "$count" -gt 1 ]; then
 		output "\nMultiple OpenMRS application directories found, not supported.\n"
 		quit
 	fi
@@ -410,7 +414,7 @@ function locate_runtime_props {
 
 function stop_services {
 
-	if [ $new_install -eq 1 ]; then
+	if [ "$new_install" -eq 1 ]; then
 		return 0
 	fi
 
@@ -419,7 +423,7 @@ function stop_services {
 	output "\nStopping services..."
 	
 
-        if [ $existing_containers -eq 1 ]; then
+        if [ "$existing_containers" -eq 1 ]; then
 	        output " stopping Tomcat (container)...\n"
 
                 sudo docker stop esaude-platform-tomcat
@@ -451,13 +455,13 @@ function get_mysql_validate_credentials {
 
 function backup_database {
 
-	if [ $new_install -eq 1 ]; then
+	if [ "$new_install" -eq 1 ]; then
 		return 0
 	fi
 
 	output "\nAttempting to backup OpenMRS database...\n"
 
-        if [ $existing_containers -eq 1 ]; then
+        if [ "$existing_containers" -eq 1 ]; then
                 get_mysql_root_credentials
                 eval "sudo docker exec esaude-platform-mysql sh -c 'mysqldump --hex-blob --routines --triggers -uroot -p$mysql_pass --databases $mysql_db > /tmp/$database_backup'"
                 eval "sudo docker cp esaude-platform-mysql:/tmp/$database_backup ."
@@ -483,7 +487,7 @@ function backup_database {
 
 function clean_backup {
 
-	if [ $new_install -eq 1 ]; then
+	if [ "$new_install" -eq 1 ]; then
 		return 0
 	fi
 
@@ -492,7 +496,7 @@ function clean_backup {
 		if [ -e "$clean_database_script_path" ]; then
 			output "\nCleaning database backup..."
 			./$clean_database_script_path $database_backup $cleaned_database_backup
-			if [ $? -eq 0 ]; then
+			if [ "$?" -eq 0 ]; then
 				output " success...\n"
 			else
 				output " failed...\n"
@@ -511,7 +515,7 @@ function clean_backup {
 
 function cleanup_validation_artifacts {
 
-        if [ $existing_containers -eq 1 ]; then
+        if [ "$existing_containers" -eq 1 ]; then
 
 	        sudo docker exec esaude-platform-mysql rm /tmp/$cleaned_database_backup
 
@@ -535,7 +539,7 @@ function cleanup_validation_artifacts {
 
 function validate_backup {
 
-	if [ $new_install -eq 1 ]; then
+	if [ "$new_install" -eq 1 ]; then
 		return 0
 	fi
 
@@ -543,11 +547,11 @@ function validate_backup {
 
 	        output "\nAttempting to validate database backup..."
 
-                if [ $existing_containers -eq 1 ]; then
+                if [ "$existing_containers" -eq 1 ]; then
 
 	                sudo docker cp ./$cleaned_database_backup esaude-platform-mysql:/tmp/$cleaned_database_backup
 	                res=$(sudo docker exec esaude-platform-mysql ls -l /tmp/$cleaned_database_backup | wc -l)
-	                if [ $res -ne 1 ]; then
+	                if [ "$res" -ne 1 ]; then
 		                output " failed...\n"
                                 cleanup_validation_artifacts
 		                quit
@@ -559,7 +563,7 @@ function validate_backup {
 
 	                sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass -e "create database $validate_db CHARACTER SET utf8 COLLATE utf8_general_ci;"
 	                eval "sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $validate_db -e \"source /tmp/$cleaned_database_backup;\""
-	                if [ $? -ne 0 ]; then
+	                if [ "$?" -ne 0 ]; then
 		                output " failed...\n"
                                 cleanup_validation_artifacts
 		                quit
@@ -567,7 +571,7 @@ function validate_backup {
 
 	                original_table_cnt=$(sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass openmrs -e "show tables;" | wc -l)
 	                restored_table_cnt=$(sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $validate_db -e "show tables;" | wc -l)
-	                if [ $restored_table_cnt -lt 10 ] || [ $original_table_cnt -ne $restored_table_cnt ]; then
+	                if [ "$restored_table_cnt" -lt 10 ] || [ "$original_table_cnt" -ne "$restored_table_cnt" ]; then
 		                output " failed...\n"
                                 cleanup_validation_artifacts
 		                quit
@@ -585,7 +589,7 @@ function validate_backup {
 
        	                        eval "mysql -u'$validate_user' -p'$validate_pass' -e \"create database $validate_db CHARACTER SET utf8 COLLATE utf8_general_ci;\""
        	                        eval "mysql -u'$validate_user' -p'$validate_pass' $validate_db -e \"source $cleaned_database_backup;\""
-	                        if [ $? -ne 0 ]; then
+	                        if [ "$?" -ne 0 ]; then
 		                        output " failed...\n"
                                         cleanup_validation_artifacts
 		                        quit
@@ -593,7 +597,7 @@ function validate_backup {
 
 	                        original_table_cnt=$(mysql -u$omrs_user -p$omrs_pass openmrs -e "show tables;" | wc -l)
 	                        restored_table_cnt=$(mysql -u$validate_user -p$validate_pass $validate_db -e "show tables;" | wc -l)
-	                        if [ $restored_table_cnt -lt 10 ] || [ $original_table_cnt -ne $restored_table_cnt ]; then
+	                        if [ "$restored_table_cnt" -lt 10 ] || [ "$original_table_cnt" -ne "$restored_table_cnt" ]; then
 		                        output " failed...\n"
                                         cleanup_validation_artifacts
 		                        quit
@@ -645,28 +649,28 @@ function install_docker {
 	output "\nChecking for docker...\n"
 
 	dpkg_detect_installed docker 
-	if [ $? -eq 0 ]; then
+	if [ "$?" -eq 0 ]; then
 		output "Existing version of docker found... uninstalling...\n"
         	sudo dpkg --purge docker
 	fi
 
 	dpkg_detect_installed docker-engine
-	if [ $? -eq 0 ]; then
+	if [ "$?" -eq 0 ]; then
 		output "Existing version of docker-engine found... uninstalling...\n"
         	sudo dpkg --purge docker-engine
 	fi
 
 	dpkg_detect_installed docker.io
-	if [ $? -eq 0 ]; then
+	if [ "$?" -eq 0 ]; then
 		output "Existing version of docker.io found... uninstalling...\n"
         	sudo dpkg --purge docker.io
 	fi
 
 	dpkg_detect_installed docker-ce
-	if [ $? -eq 0 ]; then
+	if [ "$?" -eq 0 ]; then
 		output "Existing version of docker-ce found... checking version...\n"
 		compare_versions $(dpkg_version_installed docker-ce) $min_docker_version
-		if [ $? -ne 0 ]; then
+		if [ "$?" -ne 0 ]; then
 			output "Current version incompatible, upgrade required...\n"
 			upgrading_docker_version=1
 		else	
@@ -679,7 +683,7 @@ function install_docker {
 		#docker-ce not installed (at least not to dpkg)
 	fi
 
-	if [ $install_docker -eq 1 ]; then
+	if [ "$install_docker" -eq 1 ]; then
 
 		output "\nLooking for docker installer...\n"
 
@@ -687,7 +691,7 @@ function install_docker {
 			output "Packaged copy of docker installer found...\n"
 		else
 			output "Packaged copy of docker installer not found... attempting to download...\n"
-			if [ ! -d $ubuntu_codename ]; then
+			if [ ! -d "$ubuntu_codename" ]; then
 		        	mkdir "$ubuntu_codename"
 			fi
 			sudo wget -r -l1 -np -nd -P "$ubuntu_codename" "$docker_download_url" --progress=dot -A "$docker_download_glob"
@@ -716,27 +720,28 @@ function install_docker {
 			eval "pkg_req=\${$release_req_pkgs[$package_index]}"
 			eval "ver_req=\${$release_req_vers[$package_index]}"
 
-			if [ $pkg_req -eq 1 ]; then
+			if [ "$pkg_req" -eq 1 ]; then
 				
 				output "\nLooking for docker dependency ${pkg}...\n"
 
 				install_pkg=0
 				
 				dpkg_detect_installed ${pkg}
-
-	               		if [ "$?" -eq 0 ]; then
-			                output "Docker dependency already installed... checking version...\n"
-			                compare_versions $(dpkg_version_installed ${pkg} ) ${ver_req}
-		        	        if [ $? -ne 0 ]; then
-			        	        output "Current version incompatible, installing newer version...\n"
-                                        	install_pkg=1
-		                	else	
-			                	output "Current version satisfies requirements...\n"
-                               		fi
-                        	else
+				if [ "$?" -eq 0 ]; then
+					
+				output "Docker dependency already installed... checking version...\n"
+					
+					compare_versions $(dpkg_version_installed ${pkg} ) ${ver_req}
+					if [ "$?" -ne 0 ]; then
+						output "Current version incompatible, installing newer version...\n"
+						install_pkg=1
+					else	
+						output "Current version satisfies requirements...\n"
+					fi
+				else
 					output "Docker dependency not found... installing...\n"
-                               	 	install_pkg=1
-                        	fi
+					install_pkg=1
+				fi
 
 				if [ "$install_pkg" -ne 0  ]; then
 					
@@ -746,7 +751,7 @@ function install_docker {
 						output "Packaged copy of docker dependency found...\n"
 						sudo dpkg -i $dep_pkg_filename
 						dpkg_detect_installed ${pkg}
-						if [ $? -eq 0 ]; then
+						if [ "$?" -eq 0 ]; then
 							output "Docker dependency successfully installed...\n"
 						else
 							output "Docker dependency not successfully installed...\n"
@@ -754,13 +759,13 @@ function install_docker {
 						fi
 					else
 						output "Packaged copy of docker dependency not found... attempting to download...\n"
-						if [ ! -d $ubuntu_codename ]; then
+						if [ ! -d "$ubuntu_codename" ]; then
 			        			mkdir $ubuntu_codename
 						fi
 					
 						sudo apt-get -q install ${pkg}
 						dpkg_detect_installed ${pkg}
-						if [ $? -eq 0 ]; then
+						if [ "$?" -eq 0 ]; then
 							output "Docker dependency successfully installed...\n"
 						else
 							output "Docker dependency not successfully installed...\n"
@@ -774,7 +779,7 @@ function install_docker {
 
 		sudo dpkg -i $docker_installer
 		dpkg_detect_installed docker-ce
-		if [ $? -eq 0 ]; then
+		if [ "$?" -eq 0 ]; then
 			output "\nDocker successfully installed...\n"
 		else
 			output "\nDocker not successfully installed...\n"
@@ -794,7 +799,7 @@ function install_docker {
 		#return code is 
 		#	1 when left is < right
 		#	0 when left is >= right
-		if [ $? -eq 1 ]; then
+		if [ "$?" -eq 1 ]; then
                 	output "Current version incompatible, upgrade required...\n"
 			upgrading_docker_compose_version=1
 		else	
@@ -806,7 +811,7 @@ function install_docker {
 	fi
 
 	#install docker compose
-	if [ $install_docker_compose -eq 1 ] || [ $upgrading_docker_compose_version -eq 1 ]; then 
+	if [ "$install_docker_compose" -eq 1 ] || [ "$upgrading_docker_compose_version" -eq 1 ]; then 
 		
 		output "\nLooking for docker-compose...\n"
 		if [ ! -e "$local_docker_compose_path" ]; then
@@ -838,10 +843,10 @@ function handle_esaude_network {
 	output "\nLooking for docker network 'esaude_network'..."
 
 	res=$(sudo docker network ls | grep -c 'esaude_network')
-	if [ $res -eq 0 ]; then
+	if [ "$res" -eq 0 ]; then
 		output " not found... creating...\n"
 		res=$(sudo docker network create esaude_network | wc -l)
-		if [ $res -eq 0 ]; then
+		if [ "$res" -eq 0 ]; then
 			output "Failed to create docker network...\n"
 			quit
 		else
@@ -859,17 +864,18 @@ function handle_esaude_volume {
 	output "\nLooking for docker volume 'esaude_data'..."
 
 	res=$(sudo docker volume ls | grep -c 'esaude_data')
-	if [ $res -ne 0 ]; then
+	if [ "$res" -ne 0 ]; then
 		output " found... removing...\n"
 
-                get_confirmation "$docker_delete_confirm_text"
+		get_confirmation "$docker_delete_confirm_text"
 
 		res=$(sudo docker ps -aq --filter 'volume=esaude_data' | wc -l)
-		if [ $res -ne 0 ]; then
+		
+		if [ "$res" -ne 0 ]; then
 			output "\nFound $res container(s) using 'esaude_data' volume... removing...\n"
 
 			res=$(sudo docker stop $(sudo docker ps -q --filter 'volume=esaude_data') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Stopped $res container(s)...\n"
 			else
 				output "Failed to stop container(s)...\n"
@@ -877,7 +883,7 @@ function handle_esaude_volume {
 			fi
 
 			res=$(sudo docker rm $(sudo docker ps -aq --filter 'volume=esaude_data') | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Removed $res container(s)...\n"
 			else
 				output "Failed to remove container(s)...\n"
@@ -885,7 +891,7 @@ function handle_esaude_volume {
 			fi
 
 			res=$(sudo docker volume rm esaude_data | wc -l)
-			if [ $res -ne 0 ]; then
+			if [ "$res" -ne 0 ]; then
 				output "Docker volume 'esaude_data' removed... re-creating...\n"
 			else
 				output "Failed to remove 'esaude_data'...\n"
@@ -899,7 +905,7 @@ function handle_esaude_volume {
 	fi
 
 	res=$(sudo docker volume create esaude_data | wc -l)
-	if [ $res -eq 0 ]; then
+	if [ "$res" -eq 0 ]; then
 		output "Failed to create docker volume...\n"
 		quit
 	else
@@ -921,7 +927,7 @@ function load_new_platform_mysql {
 	fi
 
 	res=$(sudo docker images -q $platform_mysql_name | wc -l)
-	if [ $res -eq 1 ]; then
+	if [ "$res" -eq 1 ]; then
 		output "Image successfully installed...\n"
 	else
 		output "Image not successfully installed...\n"
@@ -939,11 +945,12 @@ function wait_for_container_start {
 	while : ; do
 		res=$(sudo docker logs --tail=5 $1 2>&1 | grep -c "$2")
 
-		if [ $res -ne 0 ]; then
+		if [ "$res" -ne 0 ]; then
 			break
 		fi
-		
-                sleep 15
+
+		sleep 15
+
 		let "time_passed=`date +%s`-$start_time"
 
 		output "$((time_passed/3600))h$((time_passed%3600/60))m$((time_passed%60))s elapsed    \r"
@@ -959,10 +966,10 @@ function start_platform_mysql {
 	sudo docker run --name esaude-platform-mysql -v esaude_data:/opt/esaude/data --network='esaude_network' --restart=unless-stopped -d $platform_mysql_name
 
 	# wait for container to start
-        wait_for_container_start esaude-platform-mysql "/usr/sbin/mysqld: ready for connections"
+	wait_for_container_start esaude-platform-mysql "/usr/sbin/mysqld: ready for connections"
 
 	res=$(sudo docker logs --tail=5 esaude-platform-mysql 2>&1 | grep -c '/usr/sbin/mysqld: ready for connections')
-	if [ $res -eq 0 ]; then
+	if [ "$res" -eq 0 ]; then
 		output "eSaúde Platform MySQL container not started...\n"
 		quit
 	else
@@ -973,7 +980,7 @@ function start_platform_mysql {
 
 function restore_database_backup {
 
-	if [ $new_install -eq 1 ]; then
+	if [ "$new_install" -eq 1 ]; then
                 start_platform_mysql
 		return 0
 	fi
@@ -992,7 +999,7 @@ function restore_database_backup {
 
 	sudo docker cp ./$cleaned_database_backup esaude-platform-mysql:/tmp/$cleaned_database_backup
 	res=$(sudo docker exec esaude-platform-mysql ls -l /tmp/$cleaned_database_backup | wc -l)
-	if [ $res -eq 1 ]; then
+	if [ "$res" -eq 1 ]; then
 		output " done...\n"
 	else
 		output " failed...\n"
@@ -1007,7 +1014,7 @@ function restore_database_backup {
 
 	sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass -e "drop database if exists openmrs; create database openmrs CHARACTER SET utf8 COLLATE utf8_general_ci;"
 	eval "sudo docker exec esaude-platform-mysql mysql -uroot -p$mysql_pass $mysql_db -e \"source /tmp/$cleaned_database_backup;\""
-	if [ $? -eq 0 ]; then
+	if [ "$?" -eq 0 ]; then
 		output " done...\n"
 	else
 		output " failed...\n"
@@ -1021,11 +1028,11 @@ function load_new_platform_tomcat {
 	output "\nLooking for eSaúde Platform Tomcat container(s)..."
 
 	res=$(sudo docker ps -aq --filter 'name=esaude-platform-tomcat' | wc -l)
-	if [ $res -ne 0 ]; then
+	if [ "$res" -ne 0 ]; then
 		output " found... removing...\n"
 
 		res=$(sudo docker stop $(sudo docker ps -aq --filter 'name=esaude-platform-tomcat') | wc -l)
-		if [ $res -ne 0 ]; then
+		if [ "$res" -ne 0 ]; then
 			output "Stopped $res container(s)...\n"
 		else
 			output "Failed to stop container(s)...\n"
@@ -1033,7 +1040,7 @@ function load_new_platform_tomcat {
 		fi
 
 		res=$(sudo docker rm $(sudo docker ps -aq --filter 'name=esaude-platform-tomcat') | wc -l)
-		if [ $res -ne 0 ]; then
+		if [ "$res" -ne 0 ]; then
 			output "Removed $res container(s)...\n"
 		else
 			output "Failed to remove container(s)...\n"
@@ -1055,7 +1062,7 @@ function load_new_platform_tomcat {
 	fi
 
 	res=$(sudo docker images -q $platform_tomcat_name | wc -l)
-	if [ $res -eq 1 ]; then
+	if [ "$res" -eq 1 ]; then
 		output "Image successfully installed...\n"
 	else
 		output "Image not successfully installed...\n"
@@ -1067,17 +1074,17 @@ function load_new_platform_tomcat {
 	sudo docker run --name esaude-platform-tomcat -p 8080:8080 -v esaude_data:/opt/esaude/data --network='esaude_network' --restart=unless-stopped -d $platform_tomcat_name
 
 	# wait for container to start
-        wait_for_container_start esaude-platform-tomcat "INFO: Server startup in "
+	wait_for_container_start esaude-platform-tomcat "INFO: Server startup in "
 
 	# always needs to be restarted after initial start?
 	sleep 10
 	sudo docker restart esaude-platform-tomcat
 	sleep 20
 
-        wait_for_container_start esaude-platform-tomcat "INFO: Server startup in "
+	wait_for_container_start esaude-platform-tomcat "INFO: Server startup in "
 
 	res=$(sudo docker logs --tail=5 esaude-platform-tomcat 2>&1 | grep -c 'INFO: Server startup in ')
-	if [ $res -eq 0 ]; then
+	if [ "$res" -eq 0 ]; then
 		output "eSaúde Platform Tomcat container not started...\n"
 		quit
 	else
@@ -1091,11 +1098,11 @@ function load_emr_poc {
 	output "\nLooking for eSaúde EMR POC container..."
 
 	res=$(sudo docker ps -aq --filter 'name=esaude-emr-poc' | wc -l)
-	if [ $res -ne 0 ]; then
+	if [ "$res" -ne 0 ]; then
 		output " found... removing...\n"
 
 		res=$(sudo docker stop $(sudo docker ps -aq --filter 'name=esaude-emr-poc') | wc -l)
-		if [ $res -ne 0 ]; then
+		if [ "$res" -ne 0 ]; then
 			output "Stopped $res container(s)...\n"
 		else
 			output "Failed to stop container(s)...\n"
@@ -1103,7 +1110,7 @@ function load_emr_poc {
 		fi
 
 		res=$(sudo docker rm $(sudo docker ps -aq --filter 'name=esaude-emr-poc') | wc -l)
-		if [ $res -ne 0 ]; then
+		if [ "$res" -ne 0 ]; then
 			output "Removed $res container(s)...\n"
 		else
 			output "Failed to remove container(s)...\n"
@@ -1125,7 +1132,7 @@ function load_emr_poc {
 	fi
 
 	res=$(sudo docker images -q $poc_name | wc -l)
-	if [ $res -eq 1 ]; then
+	if [ "$res" -eq 1 ]; then
 		output "Image successfully installed...\n"
 	else
 		output "Image not successfully installed...\n"
@@ -1137,10 +1144,10 @@ function load_emr_poc {
 	sudo docker run --name esaude-emr-poc -p 80:80 --network='esaude_network' --link=esaude-platform-tomcat --restart=unless-stopped -d $poc_name
 
 	# wait for container to start
-        wait_for_container_start esaude-emr-poc "httpd -D FOREGROUND"
+	wait_for_container_start esaude-emr-poc "httpd -D FOREGROUND"
 
 	res=$(sudo docker logs --tail=5 esaude-emr-poc 2>&1 | grep -c 'httpd -D FOREGROUND')
-	if [ $res -eq 0 ]; then
+	if [ "$res" -eq 0 ]; then
 		output "eSaúde EMR POC container not started...\n"
 		quit
 	else
@@ -1149,9 +1156,72 @@ function load_emr_poc {
 
 }
 
+
+function disable_service_systemd {
+
+		sudo systemctl disable $1
+
+		if [ "$?" -ne 0 ]; then
+			output "$disabling_service_error"
+		else
+			output "OK\n"
+		fi
+
+}
+
+function disable_native_services_systemd {
+
+	services=("mysql" "$tomcat_version")
+
+	for service in ${services[*]}; do
+
+		output "Disabling $service... "
+
+		disable_service $service
+	
+	done
+}
+
+function disable_native_services {
+
+
+	if [ "$new_install" != 1 ]; then
+
+		output "Disabling native services... \n"
+
+		#trusty uses upstart AND update-rc.d
+		if [ "$ubuntu_codename" == "trusty" ]; then
+
+			output "Disabling $tomcat_version... "
+			sudo update-rc.d -f $tomcat_version remove
+			if [ "$?" -ne 0 ]; then
+				output "$disabling_service_error"
+			else
+				output "OK\n"
+			fi
+
+			output "Disabling mysql... "
+			echo "manual" > sudo tee /etc/init/mysql.override
+			if [ "$?" -ne 0 ]; then
+				output "$disabling_service_error"
+			else
+				output "OK\n"
+			fi
+		
+		else
+			
+			#use systemd
+			disable_native_services_systemd
+
+		fi
+
+	fi
+}
+
+
 function instruct_next_steps {
 
-        output "\n$next_steps_text\n"
+		output "\n$next_steps_text\n"
 
 }
 
@@ -1174,14 +1244,14 @@ function main {
 	backup_database
 
 	clean_backup
-        
-        validate_backup
+
+	validate_backup
 
 	install_docker
 
-	if [ $install_docker -eq 1 ] || [ $upgrading_docker_version -eq 1 ] || [ $install_docker_compose -eq 1 ] || [ $upgrading_docker_compose_version -eq 1 ]; then 
-        	output "\nVerifying docker/docker-compose installation/upgrade...\n"
-        	install_docker
+	if [ "$install_docker" -eq 1 ] || [ "$upgrading_docker_version" -eq 1 ] || [ "$install_docker_compose" -eq 1 ] || [ "$upgrading_docker_compose_version" -eq 1 ]; then 
+		output "\nVerifying docker/docker-compose installation/upgrade...\n"
+		install_docker
 	fi
 
 	handle_esaude_network
@@ -1194,7 +1264,9 @@ function main {
 
 	load_new_platform_tomcat
 
-        load_emr_poc
+	load_emr_poc
+
+	disable_native_services
 
 	instruct_next_steps
 
