@@ -1177,7 +1177,7 @@ function disable_native_services_systemd {
 
 		output "Disabling $service... "
 
-		disable_service $service
+		disable_service_systemd $service
 	
 	done
 }
